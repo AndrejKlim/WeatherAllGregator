@@ -1,6 +1,7 @@
 package com.weatherallgregator.client;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class YandexApiClient {
 
     private static final String YANDEX_API_KEY_HEADER = "X-Yandex-API-Key";
@@ -39,6 +41,7 @@ public class YandexApiClient {
 
         var httpEntity = new HttpEntity<>(headers);
 
+        log.info("Request entity = {}\n params = {}", httpEntity, params);
         return restTemplate.exchange(yandexApiUrl, HttpMethod.GET, httpEntity, String.class, params).getBody();
     }
 }
