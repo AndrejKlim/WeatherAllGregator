@@ -9,7 +9,7 @@ create table yandex_forecast
 (
     id         bigserial primary key,
     created_at bigint not null,
-    forecast   jsonb
+    forecast   text
 );
 
 insert into api_call_counter(api, counter, counter_reset_at)

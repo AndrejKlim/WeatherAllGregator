@@ -1,18 +1,21 @@
 package com.weatherallgregator.jpa.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "api_call_counter")
 public class ApiCallCounter {
 
     @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
     private String api;
     private Integer counter;
+    @Column(name = "counter_reset_at")
     private Long counterResetAt;
+
+    public ApiCallCounter() {
+    }
 
     public Long getId() {
         return id;
