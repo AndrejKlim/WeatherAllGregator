@@ -13,7 +13,7 @@
     <name>weather-all-gregator</name>
 
     <properties>
-        <java.version>16</java.version>
+        <java.version>11</java.version>
     </properties>
 
     <dependencies>
@@ -45,6 +45,12 @@
             <artifactId>lombok</artifactId>
             <version>RELEASE</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.telegram</groupId>
+            <artifactId>telegrambots-abilities</artifactId>
+            <version>4.6</version>
         </dependency>
     </dependencies>
 
