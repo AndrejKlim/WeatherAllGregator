@@ -30,7 +30,7 @@ public class WeatherBot extends AbilityBot {
     }
 
     @Override
-    public int creatorId() {
+    public long creatorId() {
         return 381058662;
     }
 
@@ -43,11 +43,21 @@ public class WeatherBot extends AbilityBot {
                 .build();
     }
 
+    @Override
+    public String getBotToken() {
+        return botProperties.getToken();
+    }
+
+    @Override
+    public String getBotUsername() {
+        return botProperties.getUsername();
+    }
+
     private void getForecast(MessageContext mc) {
         YandexForecast forecast = forecastService.getForecast("53.6884", "23.8258");
         SendMessage message = null;
         try {
-            message = new SendMessage(mc.chatId(), objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(forecast));
+            message = new SendMessage(mc.chatId().toString(), objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(forecast));
         } catch (JsonProcessingException e) {
             log.error("Error during writing to json. Message = {}", e.getMessage());
         }

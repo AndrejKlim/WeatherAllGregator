@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.BotSession;
 import org.telegram.telegrambots.meta.generics.LongPollingBot;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -29,7 +30,7 @@ public class BotConfig {
 
 
     @PostConstruct
-    public void start() {
+    public void start() throws TelegramApiException {
         log.info("Starting auto config for telegram bots");
         TelegramBotsApi api = telegramBotsApi();
         pollingBots.forEach(bot -> {
@@ -43,8 +44,8 @@ public class BotConfig {
     }
 
     @Bean
-    public TelegramBotsApi telegramBotsApi() {
-        return new TelegramBotsApi();
+    public TelegramBotsApi telegramBotsApi() throws TelegramApiException {
+        return new TelegramBotsApi(DefaultBotSession.class);
     }
 
     @PreDestroy
