@@ -3,6 +3,7 @@ package com.weatherallgregator.service;
 import com.weatherallgregator.jpa.entity.ApiCallCounter;
 import com.weatherallgregator.jpa.repo.ApiCallCounterRepo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ApiCallCounterService {
 
     private static final int YANDEX_API_CALL_DAY_LIMIT = 50;
@@ -47,6 +49,7 @@ public class ApiCallCounterService {
         apiCallCounter.get().setCounter(0);
 
         repo.save(apiCallCounter.get());
+        log.info("{} Counter reset", apiCallCounter.get().getApi());
     }
 
 }
