@@ -14,6 +14,10 @@ public class ScheduledNotificationEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+    @Column(name = "forecast_type", nullable = false)
+    private String forecastType;
+    @Column(nullable = false)
+    private String sources;
 
     public String getChatId() {
         return chatId;
@@ -37,5 +41,21 @@ public class ScheduledNotificationEntity {
 
     public void setUser(UserEntity user) {
         this.user = user;
+    }
+
+    public String getForecastType() {
+        return forecastType;
+    }
+
+    public void setForecastType(final String forecastType) {
+        this.forecastType = forecastType;
+    }
+
+    public String getSources() {
+        return sources;
+    }
+
+    public void setSources(final String sources) {
+        this.sources = sources;
     }
 }

@@ -1,4 +1,4 @@
-package com.weatherallgregator.dto;
+package com.weatherallgregator.dto.yandex;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -9,20 +9,24 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class Fact {
+public class Part {
 
-    Long obsTime;
-    int temp;
-    int feelsLike;
-    String icon;
-    String condition;
-    int windSpeed;
+    String partName;
+    int tempMin;
+    int tempAvg;
+    int tempMax;
+    float windSpeed;
+    float windGust;
     String windDir;
     int pressureMm;
     int pressurePa;
     int humidity;
+    int precMm;
+    int precProb;
+    int precPeriod;
+    String icon;
+    String condition;
+    int feelsLike;
     String daytime;
     boolean polar;
-    String season;
-    float windGust;
 }

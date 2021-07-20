@@ -3,9 +3,9 @@ package com.weatherallgregator.mapper;
 import com.weatherallgregator.dto.ForecastLocation;
 import com.weatherallgregator.jpa.entity.ForecastLocationEntity;
 
-public class ForecastLocalizationMapper {
+public class ForecastLocationMapper {
 
-    private ForecastLocalizationMapper(){
+    private ForecastLocationMapper(){
 
     }
 

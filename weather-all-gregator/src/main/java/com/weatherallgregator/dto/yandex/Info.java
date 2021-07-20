@@ -1,4 +1,4 @@
-package com.weatherallgregator.dto;
+package com.weatherallgregator.dto.yandex;
 
 import lombok.AccessLevel;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.weatherallgregator.dto;
+package com.weatherallgregator.dto.yandex;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

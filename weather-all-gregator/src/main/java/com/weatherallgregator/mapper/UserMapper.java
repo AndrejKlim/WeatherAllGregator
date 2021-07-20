@@ -3,8 +3,8 @@ package com.weatherallgregator.mapper;
 import com.weatherallgregator.dto.User;
 import com.weatherallgregator.jpa.entity.UserEntity;
 
-import static com.weatherallgregator.mapper.ForecastLocalizationMapper.mapToForecastLocation;
-import static com.weatherallgregator.mapper.ForecastLocalizationMapper.mapToForecastLocationEntity;
+import static com.weatherallgregator.mapper.ForecastLocationMapper.mapToForecastLocation;
+import static com.weatherallgregator.mapper.ForecastLocationMapper.mapToForecastLocationEntity;
 
 public class UserMapper {
 

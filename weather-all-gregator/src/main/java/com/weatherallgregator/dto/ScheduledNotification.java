@@ -11,4 +11,6 @@ public class ScheduledNotification {
     private String chatId;
     private String notificationTime;
     private User user;
+    private String forecastType;
+    private String sources;
 }
