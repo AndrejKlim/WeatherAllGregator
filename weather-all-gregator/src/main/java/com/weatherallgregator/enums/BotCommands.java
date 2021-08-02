@@ -2,7 +2,7 @@ package com.weatherallgregator.enums;
 
 public enum BotCommands {
 
-    FACT,
+    WEATHER,
     FORECAST,
     SCHEDULE_NOTIFICATION,
     DELETE_NOTIFICATION,

@@ -3,25 +3,28 @@ package com.weatherallgregator.jpa.entity;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "yandex_forecast")
-public class YandexForecastEntity {
+@Table(name = "forecast")
+public class ForecastEntity {
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private Long createdAt;
     private String forecast; // in json
+    @Column(nullable = false)
+    private String source;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "forecast_location_id")
     private ForecastLocationEntity forecastLocation;
 
-    public YandexForecastEntity() {
+    public ForecastEntity() {
     }
 
-    public YandexForecastEntity(Long createdAt, String forecast, ForecastLocationEntity forecastLocation) {
+    public ForecastEntity(Long createdAt, String forecast, String source, ForecastLocationEntity forecastLocation) {
         this.createdAt = createdAt;
         this.forecast = forecast;
+        this.source = source;
         this.forecastLocation = forecastLocation;
     }
 
@@ -64,5 +67,13 @@ public class YandexForecastEntity {
 
     public void setForecastLocation(ForecastLocationEntity forecastLocation) {
         this.forecastLocation = forecastLocation;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(final String source) {
+        this.source = source;
     }
 }

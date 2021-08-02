@@ -13,7 +13,7 @@ public enum ForecastType {
                 return d;
             }
         }
-        return null;
+        return FACT;
     }
 
     ForecastType(String value) {

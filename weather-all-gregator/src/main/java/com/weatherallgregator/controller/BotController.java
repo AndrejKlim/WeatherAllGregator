@@ -1,7 +1,8 @@
 package com.weatherallgregator.controller;
 
+import com.weatherallgregator.dto.ForecastInfo;
 import com.weatherallgregator.dto.ScheduledNotification;
-import com.weatherallgregator.dto.yandex.YandexForecast;
+import com.weatherallgregator.dto.WeatherInfo;
 import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.enums.ScheduledNotificationCreatingPipeline;
@@ -9,13 +10,9 @@ import com.weatherallgregator.jpa.entity.ForecastLocationEntity;
 import com.weatherallgregator.jpa.entity.ScheduledNotificationEntity;
 import com.weatherallgregator.jpa.entity.UserEntity;
 import com.weatherallgregator.jpa.repo.UserRepo;
-import com.weatherallgregator.mapper.UserMapper;
-import com.weatherallgregator.mapper.YandexForecastMapper;
-import com.weatherallgregator.model.FactYandexModel;
-import com.weatherallgregator.model.YandexForecastModel;
 import com.weatherallgregator.service.ForecastLocationService;
+import com.weatherallgregator.service.ForecastService;
 import com.weatherallgregator.service.ScheduledNotificationService;
-import com.weatherallgregator.service.YandexForecastService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -33,21 +30,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.weatherallgregator.enums.ScheduledNotificationCreatingPipeline.*;
 import static com.weatherallgregator.mapper.ScheduledNotificationMapper.mapToScheduledNotificationEntity;
+import static com.weatherallgregator.mapper.UserMapper.mapToUser;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class BotController {
 
     public static final String NEW_USER_RESPONSE = "Вы первый раз используете систему." +
             " Отправьте свою геолокацию для получения прогноза.";
-    private final YandexForecastService yandexForecastService;
+    private final List<ForecastService> forecastServiceList;
     private final ForecastLocationService forecastLocationService;
     private final ScheduledNotificationService scheduledNotificationService;
     private final UserRepo userRepo;
@@ -72,25 +70,30 @@ public class BotController {
                 });
     }
 
-    public String getFactForecast(final Update update) {
+    public List<String> getWeather(final Update update) {
 
         Optional<UserEntity> user = userRepo.findById(update.getCallbackQuery().getFrom().getId());
-        if (user.isEmpty()) return NEW_USER_RESPONSE;
+        if (user.isEmpty()) return List.of(NEW_USER_RESPONSE);
 
-        return user.map(getForecastByUserSettings())
-                .map(YandexForecastMapper::mapToFactYandexModel)
-                .map(FactYandexModel::toRuStringResponse)
-                .orElse("Error during retrieving forecast");
+        return user
+                .map(u -> forecastServiceList.stream()
+                        .map(fs -> fs.getWeather(mapToUser(u)))
+                        .map(WeatherInfo::toRuWeatherResponse)
+                        .collect(Collectors.toList()))
+                .orElse(List.of("Error during retrieving forecast"));
     }
 
-    public String getForecast(final Update update) {
+    public List<String> getForecast(final Update update) {
         Optional<UserEntity> user = userRepo.findById(update.getCallbackQuery().getFrom().getId());
-        if (user.isEmpty()) return NEW_USER_RESPONSE;
+        if (user.isEmpty()) return List.of(NEW_USER_RESPONSE);
 
-        return user.map(getForecastByUserSettings())
-                .map(YandexForecastMapper::mapToYandexModel)
-                .map(YandexForecastModel::toRuStringResponse)
-                .orElse("Error during retrieving forecast");
+
+        return user
+                .map(u -> forecastServiceList.stream()
+                        .map(fs -> fs.getForecast(mapToUser(u)))
+                        .map(ForecastInfo::toRuForecastResponse)
+                        .collect(Collectors.toList()))
+                .orElse(List.of("Error during retrieving forecast"));
     }
 
     public SendMessage handleScheduledNotificationCreatingPipeline(final Update update) {
@@ -102,7 +105,7 @@ public class BotController {
                 return new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(),
                         "Пользователь не найден. Пришлите сначала свою геолокацию для записи пользователя");
             }
-            scheduledNotification.setUser(UserMapper.mapToUser(user.get()));
+            scheduledNotification.setUser(mapToUser(user.get()));
             scheduledNotification.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
             return chooseHours(update);
         }
@@ -111,8 +114,12 @@ public class BotController {
             return chooseMinutes(update);
         }
         if (areMinutesSet(update)) {
+            var hours = scheduledNotification.getNotificationTime();
+            if (hours.length() == 1) {
+                hours = "0" + hours;
+            }
             scheduledNotification.setNotificationTime(
-                    scheduledNotification.getNotificationTime() + ":" + getPayloadFromUpdate(update));
+                    hours + ":" + getPayloadFromUpdate(update));
             return chooseForecastType(update);
         }
         if (isForecastTypeSet(update)) {
@@ -245,15 +252,6 @@ public class BotController {
         return isEventHappened(update, FINISHED);
     }
 
-    private Function<UserEntity, YandexForecast> getForecastByUserSettings() {
-        return userEntity -> {
-            var lat = userEntity.getForecastLocation().getLat();
-            var lon = userEntity.getForecastLocation().getLon();
-            log.info("Returning forecast by params: lat = {}, lon = {}", lat, lon);
-            return yandexForecastService.getForecast(UserMapper.mapToUser(userEntity));
-        };
-    }
-
     private Supplier<? extends Optional<? extends UserEntity>> createUser(final User user) {
         return () -> Optional.of(new UserEntity(user.getId(), "GMT+3"));
     }
@@ -263,7 +261,7 @@ public class BotController {
     }
 
     private String buildPipelineMessage(final ScheduledNotificationCreatingPipeline event, final String stageData) {
-        return String.format("%s;%s;%s", SCHEDULING_NOTIFICATION_CREATING.name(), event.name(), stageData);
+        return String.format("%s;%s;%s", SN_PIPELINE.name(), event.name(), stageData);
     }
 
     private boolean isEventHappened(final Update update, final ScheduledNotificationCreatingPipeline event) {

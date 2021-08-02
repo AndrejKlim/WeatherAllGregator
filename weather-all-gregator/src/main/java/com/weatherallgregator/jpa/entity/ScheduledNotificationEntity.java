@@ -17,7 +17,7 @@ public class ScheduledNotificationEntity {
     @Column(name = "forecast_type", nullable = false)
     private String forecastType;
     @Column(nullable = false)
-    private String sources;
+    private String sources; // format - SOURCE,SOURCE,SOURCE...
 
     public String getChatId() {
         return chatId;

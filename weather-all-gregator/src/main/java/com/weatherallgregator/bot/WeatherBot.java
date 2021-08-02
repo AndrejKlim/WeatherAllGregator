@@ -4,6 +4,7 @@ import com.weatherallgregator.controller.BotController;
 import com.weatherallgregator.enums.BotCommands;
 import com.weatherallgregator.property.BotProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
@@ -20,13 +21,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.weatherallgregator.enums.ScheduledNotificationCreatingPipeline.SCHEDULING_NOTIFICATION_CREATING;
+import static com.weatherallgregator.enums.ScheduledNotificationCreatingPipeline.SN_PIPELINE;
 import static com.weatherallgregator.enums.ScheduledNotificationCreatingPipeline.STARTED;
 
 @Component
 @Slf4j
 public class WeatherBot extends AbilityBot {
 
+    public static final String MARKDOWN = "Markdown";
     private final BotProperties botProperties;
     private final BotController botController;
 
@@ -54,11 +56,11 @@ public class WeatherBot extends AbilityBot {
                     forecastButton.setCallbackData(BotCommands.FORECAST.name());
 
                     var currentButton = new InlineKeyboardButton("Погода на настоящий момент");
-                    currentButton.setCallbackData(BotCommands.FACT.name());
+                    currentButton.setCallbackData(BotCommands.WEATHER.name());
 
                     var scheduleButton = new InlineKeyboardButton("Запланировать уведомления о погоде");
                     scheduleButton.setCallbackData(String.format("%s;%s;%s",
-                            SCHEDULING_NOTIFICATION_CREATING.name(),
+                            SN_PIPELINE.name(),
                             STARTED.name(),
                             ""));
 
@@ -97,8 +99,8 @@ public class WeatherBot extends AbilityBot {
         if (isForecastRequested(update)) {
             getForecast(update);
         }
-        if (isFactRequested(update)){
-            getFact(update);
+        if (isWeatherRequested(update)){
+            getWeather(update);
         }
         if (isLocationSetRequested(update)){
             getLocationButton(update);
@@ -127,8 +129,8 @@ public class WeatherBot extends AbilityBot {
         return checkBotCommand(update, BotCommands.FORECAST);
     }
 
-    private boolean isFactRequested(final Update update) {
-        return checkBotCommand(update, BotCommands.FACT);
+    private boolean isWeatherRequested(final Update update) {
+        return checkBotCommand(update, BotCommands.WEATHER);
     }
 
     private boolean isLocationSetRequested(final Update update) {
@@ -140,7 +142,7 @@ public class WeatherBot extends AbilityBot {
     }
 
     private boolean isScheduledNotificationCreatingPipeline(Update update) {
-        return update.getCallbackQuery().getData().startsWith(SCHEDULING_NOTIFICATION_CREATING.name());
+        return update.getCallbackQuery().getData().startsWith(SN_PIPELINE.name());
     }
 
     private boolean checkBotCommand(final Update update, final BotCommands command) {
@@ -148,15 +150,23 @@ public class WeatherBot extends AbilityBot {
     }
 
     private void getForecast(final Update update) {
-        String forecast = botController.getForecast(update);
-        var message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), forecast);
-        silent.execute(message);
+        botController.getForecast(update).stream()
+                .map(s -> {
+                    final var sendMessage = new SendMessage(getChatId(update), s);
+                    sendMessage.setParseMode(MARKDOWN);
+                    return sendMessage;
+                })
+                .forEach(message -> silent.execute(message));
     }
 
-    private void getFact(final Update update) {
-        String forecast = botController.getFactForecast(update);
-        var message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), forecast);
-        silent.execute(message);
+    private void getWeather(final Update update) {
+        botController.getWeather(update).stream()
+                .map(s -> {
+                    final var sendMessage = new SendMessage(getChatId(update), s);
+                    sendMessage.setParseMode(MARKDOWN);
+                    return sendMessage;
+                })
+                .forEach(message -> silent.execute(message));
     }
 
     private void getLocationButton(final Update update) {
@@ -167,7 +177,7 @@ public class WeatherBot extends AbilityBot {
         var keyboardMarkup = new ReplyKeyboardMarkup();
         keyboardMarkup.setKeyboard(List.of(new KeyboardRow(List.of(locationButton))));
 
-        var message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Geolocation");
+        var message = new SendMessage(getChatId(update), "Geolocation");
         message.setReplyMarkup(keyboardMarkup);
 
         silent.execute(message);
@@ -175,6 +185,11 @@ public class WeatherBot extends AbilityBot {
 
     private void deleteNotification(final Update update) {
         botController.deleteNotification(update);
-        silent.execute(new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Удалено"));
+        silent.execute(new SendMessage(getChatId(update), "Удалено"));
+    }
+
+    @NotNull
+    private String getChatId(final Update update) {
+        return update.getCallbackQuery().getMessage().getChatId().toString();
     }
 }

@@ -1,10 +1,12 @@
 package com.weatherallgregator.service;
 
 import com.weatherallgregator.bot.WeatherBot;
+import com.weatherallgregator.dto.ForecastInfo;
 import com.weatherallgregator.dto.User;
-import com.weatherallgregator.dto.yandex.YandexForecast;
+import com.weatherallgregator.dto.WeatherInfo;
+import com.weatherallgregator.enums.ForecastSource;
+import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.repo.ScheduledNotificationRepo;
-import com.weatherallgregator.mapper.YandexForecastMapper;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,9 +19,8 @@ import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.weatherallgregator.mapper.UserMapper.mapToUser;
 
@@ -30,15 +31,17 @@ public class TimerService {
 
     private final SilentSender sender;
     private final ScheduledNotificationRepo scheduledNotificationRepo;
-    private final YandexForecastService yandexForecastService;
+    private final List<ForecastService> forecastServiceList;
 
     private Timer timer = new Timer();
     private int taskListSize = 0;
 
-    public TimerService(WeatherBot weatherBot, ScheduledNotificationRepo scheduledNotificationRepo, YandexForecastService yandexForecastService) {
+    public TimerService(final WeatherBot weatherBot,
+                        final ScheduledNotificationRepo scheduledNotificationRepo,
+                        final List<ForecastService> forecastServiceList) {
         this.sender = weatherBot.silent(); // TODO check another way to send message
         this.scheduledNotificationRepo = scheduledNotificationRepo;
-        this.yandexForecastService = yandexForecastService;
+        this.forecastServiceList = forecastServiceList;
     }
 
     @PostConstruct
@@ -69,8 +72,13 @@ public class TimerService {
                             .atTime(LocalTime.parse(notification.getNotificationTime()))
                             .atZone(ZoneId.of(notification.getUser().getTimeZone()))
                             .toInstant());
+                    String forecastType = notification.getForecastType();
+                    List<ForecastSource> sources = Arrays.stream(notification.getSources().split(","))
+                            .map(ForecastSource::valueOf)
+                            .collect(Collectors.toList());
 
-                    return new ScheduledNotificationTimerTask(chatId, executionTime, mapToUser(notification.getUser()));
+                    return new ScheduledNotificationTimerTask( mapToUser(notification.getUser()), chatId, executionTime,
+                            ForecastType.valueOfType(forecastType), sources);
                 })
                 .forEach(task -> timer.schedule(task, task.getExecutionTime(), DAY_MILLISECONDS));
     }
@@ -80,15 +88,39 @@ public class TimerService {
     @AllArgsConstructor
     private class ScheduledNotificationTimerTask extends TimerTask {
 
+        private User user;
         private String chatId;
         private Date executionTime;
-        private User user;
+        private ForecastType forecastType;
+        private List<ForecastSource> forecastSourceList;
 
         @Override
         public void run() {
-            YandexForecast forecast = yandexForecastService.getForecast(user);
-            String messageText = YandexForecastMapper.mapToFactYandexModel(forecast).toRuStringResponse();
-            sender.execute(new SendMessage(chatId, messageText));
+            forecastServiceList.stream()
+                    .filter(forecastService -> {
+                        if (forecastSourceList.size() == 1 && forecastSourceList.get(0).equals(ForecastSource.ALL)){
+                            return true;
+                        } else {
+                            return forecastSourceList.contains(forecastService.getSource());
+                        }
+                    })
+                    .map(forecastService -> {
+                        switch (forecastType) {
+                            case FACT:
+                                WeatherInfo weather = forecastService.getWeather(user);
+                                return weather.toRuWeatherResponse();
+                            case FORECAST:
+                                ForecastInfo forecast = forecastService.getForecast(user);
+                                return forecast.toRuForecastResponse();
+                            default:
+                                return "Unexpected forecast type, check logs";
+                        }
+                    })
+                    .forEach(messageText -> {
+                        final var sendMessage = new SendMessage(chatId, messageText);
+                        sendMessage.setParseMode("Markdown");
+                        sender.execute(sendMessage);
+                    });
         }
     }
 }

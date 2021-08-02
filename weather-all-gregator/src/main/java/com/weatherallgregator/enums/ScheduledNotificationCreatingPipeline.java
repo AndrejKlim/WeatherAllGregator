@@ -2,7 +2,7 @@ package com.weatherallgregator.enums;
 
 public enum ScheduledNotificationCreatingPipeline {
 
-    SCHEDULING_NOTIFICATION_CREATING,
+    SN_PIPELINE, // Scheduled notification pipeline
     STARTED,
     HOURS_SET,
     MINUTES_SET,

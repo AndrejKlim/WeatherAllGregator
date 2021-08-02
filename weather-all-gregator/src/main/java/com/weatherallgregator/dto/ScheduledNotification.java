@@ -12,5 +12,5 @@ public class ScheduledNotification {
     private String notificationTime;
     private User user;
     private String forecastType;
-    private String sources;
+    private String sources; // format - SOURCE,SOURCE,SOURCE...
 }

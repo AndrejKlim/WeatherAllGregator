@@ -1,5 +1,7 @@
 package com.weatherallgregator.service;
 
+import com.weatherallgregator.enums.ApiCallLimit;
+import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.jpa.entity.ApiCallCounter;
 import com.weatherallgregator.jpa.repo.ApiCallCounterRepo;
 import lombok.RequiredArgsConstructor;
@@ -16,20 +18,18 @@ import java.util.Optional;
 @Slf4j
 public class ApiCallCounterService {
 
-    private static final int YANDEX_API_CALL_DAY_LIMIT = 50;
-
     private final ApiCallCounterRepo repo;
 
-    public boolean canApiCallBePerformed(String apiName){
-        Optional<ApiCallCounter> apiCallCounter = repo.findByApi(apiName);
+    public boolean canApiCallBePerformed(ForecastSource apiName){
+        Optional<ApiCallCounter> apiCallCounter = repo.findByApi(apiName.name());
         if (needsReset(apiCallCounter)){
             resetCounter(apiCallCounter); // mutates apiCallCounter here by setting 0 to counter and changing reset time
         }
-        return apiCallCounter.isPresent() && apiCallCounter.get().getCounter() < YANDEX_API_CALL_DAY_LIMIT; // TODO add choosing limit by api type
+        return apiCallCounter.isPresent() && apiCallCounter.get().getCounter() < ApiCallLimit.valueOf(apiName.name()).value;
     }
 
-    public void incrementApiCallCounter(String apiName){
-        Optional<ApiCallCounter> apiCallCounter = repo.findByApi(apiName);
+    public void incrementApiCallCounter(ForecastSource apiName){
+        Optional<ApiCallCounter> apiCallCounter = repo.findByApi(apiName.name());
         apiCallCounter.ifPresent(counter -> {
             counter.setCounter(counter.getCounter() + 1);
             repo.save(counter);

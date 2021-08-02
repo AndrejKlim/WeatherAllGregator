@@ -1,4 +1,4 @@
-package com.weatherallgregator.enums;
+package com.weatherallgregator.enums.yandex;
 
 public enum DayTime {
     NIGHT("night"),

@@ -3,7 +3,8 @@ package com.weatherallgregator.enums;
 public enum ForecastSource {
 
     ALL("Из всех источников"),
-    YANDEX("Яндекс погода");
+    YANDEX("Яндекс погода"),
+    OPEN_WEATHER("OpenWeather");
 
     public final String value;
 
