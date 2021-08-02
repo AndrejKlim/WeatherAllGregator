@@ -67,4 +67,12 @@ public class ForecastEntity {
     public void setSource(final String source) {
         this.source = source;
     }
+
+    @Override
+    public String toString() {
+        return "ForecastEntity{" +
+                "createdAt=" + createdAt +
+                ", source='" + source + '\'' +
+                '}';
+    }
 }
