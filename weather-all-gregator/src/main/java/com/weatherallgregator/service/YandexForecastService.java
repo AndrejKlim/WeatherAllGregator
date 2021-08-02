@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 
 import static com.weatherallgregator.enums.ForecastSource.YANDEX;
@@ -45,7 +46,7 @@ public class YandexForecastService extends ForecastService{
     public ForecastInfo getForecast(final User user) {
         return getYandexForecast(user)
                 .map(f -> (ForecastInfo) f)
-                .orElse(() -> NO_INFO);
+                .orElse(() -> List.of(NO_INFO));
     }
 
     @Override

@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
@@ -42,9 +43,9 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
     }
 
     @Override
-    public String toRuForecastResponse() {
+    public List<String> toRuForecastResponse() {
         return forecast.getParts().stream()
-                .map(p -> String.format("Яндекс погода\n" +
+                .map(p -> String.format("*Яндекс погода*\n" +
                                 "Погода на %s\n" +
                                 "Средняя температура - %d ℃\n" +
                                 "Облачность или осадки - %s\n" +
@@ -61,6 +62,6 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
                         p.getHumidity(),
                         p.getPrecProb(),
                         p.getPrecMm()))
-                .collect(Collectors.joining("\n==============\n"));
+                .collect(Collectors.toList());
     }
 }

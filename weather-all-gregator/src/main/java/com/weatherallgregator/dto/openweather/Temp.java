@@ -6,8 +6,12 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Coordinates {
+public class Temp {
 
-    float lon;
-    float lat;
+    float morn;
+    float day;
+    float eve;
+    float night;
+    float min;
+    float max;
 }

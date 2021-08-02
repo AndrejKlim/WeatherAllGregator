@@ -1,6 +1,8 @@
 package com.weatherallgregator.dto;
 
+import java.util.List;
+
 public interface ForecastInfo {
 
-    String toRuForecastResponse();
+    List<String> toRuForecastResponse();
 }

@@ -6,11 +6,8 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Sys {
+public class Minutely {
 
-    int type;
-    long id;
-    String country;
-    long sunrise;
-    long sunset;
+    long dt;
+    float precipitation;
 }

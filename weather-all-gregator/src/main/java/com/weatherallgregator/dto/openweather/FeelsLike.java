@@ -6,7 +6,10 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Clouds {
+public class FeelsLike {
 
-    int all;
+    float morn;
+    float day;
+    float eve;
+    float night;
 }

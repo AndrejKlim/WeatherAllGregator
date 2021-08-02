@@ -1,0 +1,1 @@
+delete from forecast where source = 'OPEN_WEATHER';

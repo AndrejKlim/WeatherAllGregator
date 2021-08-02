@@ -10,7 +10,5 @@ import lombok.experimental.FieldDefaults;
 public class Rain {
 
     @JsonProperty("1h")
-    int oneHour; // rain volume in 1 hour in mm
-    @JsonProperty("3h")
-    int threeHour;
+    float oneHour; // rain volume in 1 hour in mm
 }

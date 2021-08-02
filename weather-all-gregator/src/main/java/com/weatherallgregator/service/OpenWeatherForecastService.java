@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 
 import static com.weatherallgregator.enums.ForecastSource.OPEN_WEATHER;
@@ -43,7 +44,9 @@ public class OpenWeatherForecastService extends ForecastService{
 
     @Override
     public ForecastInfo getForecast(final User user) {
-        return () -> "Can't receive forecast from OpenWeather";
+        return getCurrentForecast(user)
+                .map(f -> (ForecastInfo) f)
+                .orElse(() -> List.of(NO_INFO));
     }
 
     @Override

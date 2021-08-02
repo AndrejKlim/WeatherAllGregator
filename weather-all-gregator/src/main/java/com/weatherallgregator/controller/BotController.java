@@ -92,6 +92,7 @@ public class BotController {
                 .map(u -> forecastServiceList.stream()
                         .map(fs -> fs.getForecast(mapToUser(u)))
                         .map(ForecastInfo::toRuForecastResponse)
+                        .flatMap(List::stream)
                         .collect(Collectors.toList()))
                 .orElse(List.of("Error during retrieving forecast"));
     }

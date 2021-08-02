@@ -108,14 +108,15 @@ public class TimerService {
                         switch (forecastType) {
                             case FACT:
                                 WeatherInfo weather = forecastService.getWeather(user);
-                                return weather.toRuWeatherResponse();
+                                return List.of(weather.toRuWeatherResponse());
                             case FORECAST:
                                 ForecastInfo forecast = forecastService.getForecast(user);
                                 return forecast.toRuForecastResponse();
                             default:
-                                return "Unexpected forecast type, check logs";
+                                return List.of("Unexpected forecast type, check logs");
                         }
                     })
+                    .flatMap(List::stream)
                     .forEach(messageText -> {
                         final var sendMessage = new SendMessage(chatId, messageText);
                         sendMessage.setParseMode("Markdown");
