@@ -31,6 +31,7 @@ public abstract class ForecastService {
     public abstract ForecastSource getSource();
 
     protected boolean isExpired(final ForecastEntity forecast) {
+        // FIXME: 2.08.21 change checking for expiring, for different types of forecasts and api
         var todayMorning = LocalDateTime.now().withHour(7).withMinute(0).withSecond(0).truncatedTo(ChronoUnit.SECONDS);
         long todayMorningSeconds = todayMorning.toEpochSecond(ZoneOffset.UTC);
 

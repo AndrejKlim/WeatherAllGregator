@@ -98,7 +98,7 @@ public class WeatherBot extends AbilityBot {
 
         if (isForecastRequested(update)) {
             getForecast(update);
-        }
+        } // FIXME: 2.08.21 may be show menu dialog after weather and forecast messages
         if (isWeatherRequested(update)){
             getWeather(update);
         }

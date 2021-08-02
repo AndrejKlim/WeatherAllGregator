@@ -153,7 +153,7 @@ public class BotController {
             var keyboardButton = new InlineKeyboardButton(String.valueOf(num));
             keyboardButton.setCallbackData(buildPipelineMessage(HOURS_SET, String.valueOf(num)));
             keyboard.add(List.of(keyboardButton));
-        });
+        }); // FIXME: 2.08.21 maybe put buttons in rows
 
         var keyboardMarkup = new InlineKeyboardMarkup();
         keyboardMarkup.setKeyboard(keyboard);
@@ -177,7 +177,7 @@ public class BotController {
                     var keyboardButton = new InlineKeyboardButton(String.valueOf(num));
                     keyboardButton.setCallbackData(buildPipelineMessage(MINUTES_SET, String.valueOf(num)));
                     keyboard.add(List.of(keyboardButton));
-                });
+                }); // FIXME: 2.08.21 may be put buttons in rows
 
         var keyboardMarkup = new InlineKeyboardMarkup();
         keyboardMarkup.setKeyboard(keyboard);
