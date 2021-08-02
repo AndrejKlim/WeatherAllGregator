@@ -52,15 +52,6 @@ public class ForecastEntity {
         this.forecast = forecast;
     }
 
-    @Override
-    public String toString() {
-        return "YandexForecastEntity{" +
-                "id=" + id +
-                ", createdAt=" + createdAt +
-                ", forecast='" + forecast + '\'' +
-                '}';
-    }
-
     public ForecastLocationEntity getForecastLocation() {
         return forecastLocation;
     }

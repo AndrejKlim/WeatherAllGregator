@@ -106,7 +106,7 @@ public class TimerService {
                     })
                     .map(forecastService -> {
                         switch (forecastType) {
-                            case FACT:
+                            case WEATHER:
                                 WeatherInfo weather = forecastService.getWeather(user);
                                 return List.of(weather.toRuWeatherResponse());
                             case FORECAST:

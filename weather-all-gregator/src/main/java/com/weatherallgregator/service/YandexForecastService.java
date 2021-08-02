@@ -7,6 +7,7 @@ import com.weatherallgregator.dto.User;
 import com.weatherallgregator.dto.WeatherInfo;
 import com.weatherallgregator.dto.yandex.YandexForecast;
 import com.weatherallgregator.enums.ForecastSource;
+import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.entity.ForecastEntity;
 import com.weatherallgregator.jpa.repo.ForecastRepo;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.weatherallgregator.enums.ForecastSource.YANDEX;
+import static com.weatherallgregator.enums.ForecastType.FORECAST;
+import static com.weatherallgregator.enums.ForecastType.WEATHER;
 import static com.weatherallgregator.mapper.ForecastLocationMapper.mapToForecastLocationEntity;
 import static com.weatherallgregator.mapper.YandexForecastMapper.readForecast;
 
@@ -37,14 +40,14 @@ public class YandexForecastService extends ForecastService{
 
     @Override
     public WeatherInfo getWeather(final User user) {
-        return getYandexForecast(user)
+        return getYandexForecast(user, WEATHER)
                 .map(f -> (WeatherInfo) f)
                 .orElse(() -> NO_INFO);
     }
 
     @Override
     public ForecastInfo getForecast(final User user) {
-        return getYandexForecast(user)
+        return getYandexForecast(user, FORECAST)
                 .map(f -> (ForecastInfo) f)
                 .orElse(() -> List.of(NO_INFO));
     }
@@ -54,14 +57,14 @@ public class YandexForecastService extends ForecastService{
         return YANDEX;
     }
 
-    public Optional<YandexForecast> getYandexForecast(final User user) {
+    public Optional<YandexForecast> getYandexForecast(final User user, final ForecastType forecastType) {
         ForecastLocation forecastLocation = user.getForecastLocation();
         Optional<ForecastEntity> lastForecastByLocation =
                 repo.findFirstByForecastLocationAndSource(mapToForecastLocationEntity(forecastLocation),
                         YANDEX.name(),
                         SORT_DESC_BY_CREATED_AT);
 
-        if (lastForecastByLocation.isPresent() && !isExpired(lastForecastByLocation.get())) {
+        if (lastForecastByLocation.isPresent() && !isExpired(lastForecastByLocation.get(), forecastType)) {
             log.info("Suitable and not expired forecast found in storage, returning it. {}", lastForecastByLocation.get());
             return Optional.ofNullable(readForecast(lastForecastByLocation.get()));
         }

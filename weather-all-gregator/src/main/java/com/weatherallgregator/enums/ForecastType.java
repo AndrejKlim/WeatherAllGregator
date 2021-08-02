@@ -2,7 +2,7 @@ package com.weatherallgregator.enums;
 
 public enum ForecastType {
 
-    FACT("Погода на настоящий момент"),
+    WEATHER("Погода на настоящий момент"),
     FORECAST("Ближайший прогноз");
 
     public final String value;
@@ -13,7 +13,7 @@ public enum ForecastType {
                 return d;
             }
         }
-        return FACT;
+        return WEATHER;
     }
 
     ForecastType(String value) {
