@@ -33,7 +33,7 @@ public abstract class ForecastService {
     protected boolean isExpired(final ForecastEntity forecast, final ForecastType forecastType) {
         long expiredTime = 0;
         if (forecastType == ForecastType.WEATHER) expiredTime = 7200; // 2 hours
-        if (forecastType == ForecastType.FORECAST) expiredTime = 86400; // 1 day
+        if (forecastType == ForecastType.FORECAST) expiredTime = 28800; // 8 hours
 
         final var forecastCreatedAt = forecast.getCreatedAt();
         final var now = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);

@@ -6,20 +6,17 @@ import com.weatherallgregator.dto.User;
 import com.weatherallgregator.dto.WeatherInfo;
 import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
+import com.weatherallgregator.jpa.entity.ScheduledNotificationEntity;
 import com.weatherallgregator.jpa.repo.ScheduledNotificationRepo;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
-import javax.annotation.PostConstruct;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.*;
+import java.time.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.weatherallgregator.mapper.UserMapper.mapToUser;
@@ -27,14 +24,11 @@ import static com.weatherallgregator.mapper.UserMapper.mapToUser;
 @Component
 public class TimerService {
 
-    private static final long DAY_MILLISECONDS = 86400000;
-
     private final SilentSender sender;
     private final ScheduledNotificationRepo scheduledNotificationRepo;
     private final List<ForecastService> forecastServiceList;
 
-    private Timer timer = new Timer();
-    private int taskListSize = 0;
+    private List<ScheduledNotificationEntity> scheduledNotifications = new ArrayList<>();
 
     public TimerService(final WeatherBot weatherBot,
                         final ScheduledNotificationRepo scheduledNotificationRepo,
@@ -44,84 +38,67 @@ public class TimerService {
         this.forecastServiceList = forecastServiceList;
     }
 
-    @PostConstruct
-    public void initScheduledTasks() {
-        fillTimerQueueFromDb();
-    }
-
     @Scheduled(fixedRate = 60000)
-    public void updateTimerTasks() {
-        var actualNotificationCount = scheduledNotificationRepo.count();
-        if (actualNotificationCount == taskListSize) {
-            return;
+    public void runTasks() {
+        if (scheduledNotifications.size() < scheduledNotificationRepo.count()) {
+            fillNotificationsFromDb();
         }
 
-        timer.cancel();
-        timer = new Timer();
-        fillTimerQueueFromDb();
-    }
-
-    private void fillTimerQueueFromDb() {
-        var scheduledNotifications = scheduledNotificationRepo.findAll();
-        taskListSize = scheduledNotifications.size();
         scheduledNotifications.stream()
-                .map(notification -> {
+                .filter(TimerService::checkNotificationTime)
+                .forEach(notification -> {
 
                     String chatId = notification.getChatId();
-                    Date executionTime = Date.from(LocalDate.now()
-                            .atTime(LocalTime.parse(notification.getNotificationTime()))
-                            .atZone(ZoneId.of(notification.getUser().getTimeZone()))
-                            .toInstant());
-                    String forecastType = notification.getForecastType();
+                    ForecastType forecastType = ForecastType.valueOfType(notification.getForecastType());
                     List<ForecastSource> sources = Arrays.stream(notification.getSources().split(","))
                             .map(ForecastSource::valueOf)
                             .collect(Collectors.toList());
+                    User user = mapToUser(notification.getUser());
 
-                    return new ScheduledNotificationTimerTask( mapToUser(notification.getUser()), chatId, executionTime,
-                            ForecastType.valueOfType(forecastType), sources);
-                })
-                .forEach(task -> timer.schedule(task, task.getExecutionTime(), DAY_MILLISECONDS));
+
+                    sendForecast(chatId, forecastType, sources, user);
+                });
     }
 
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    private class ScheduledNotificationTimerTask extends TimerTask {
+    private void fillNotificationsFromDb() {
+        scheduledNotifications = scheduledNotificationRepo.findAll();
+    }
 
-        private User user;
-        private String chatId;
-        private Date executionTime;
-        private ForecastType forecastType;
-        private List<ForecastSource> forecastSourceList;
+    private static boolean checkNotificationTime(ScheduledNotificationEntity notification) {
+        final String timeZone = notification.getUser().getTimeZone();
+        final ZonedDateTime nowZoned = ZonedDateTime.now().withZoneSameInstant(ZoneId.of(timeZone));
+        final LocalDateTime notificationTime = LocalDate.now().atTime(LocalTime.parse(notification.getNotificationTime()));
+        final Duration duration = Duration.between(nowZoned, notificationTime);
 
-        @Override
-        public void run() {
-            forecastServiceList.stream()
-                    .filter(forecastService -> {
-                        if (forecastSourceList.size() == 1 && forecastSourceList.get(0).equals(ForecastSource.ALL)){
-                            return true;
-                        } else {
-                            return forecastSourceList.contains(forecastService.getSource());
-                        }
-                    })
-                    .map(forecastService -> {
-                        switch (forecastType) {
-                            case WEATHER:
-                                WeatherInfo weather = forecastService.getWeather(user);
-                                return List.of(weather.toRuWeatherResponse());
-                            case FORECAST:
-                                ForecastInfo forecast = forecastService.getForecast(user);
-                                return forecast.toRuForecastResponse();
-                            default:
-                                return List.of("Unexpected forecast type, check logs");
-                        }
-                    })
-                    .flatMap(List::stream)
-                    .forEach(messageText -> {
-                        final var sendMessage = new SendMessage(chatId, messageText);
-                        sendMessage.setParseMode("Markdown");
-                        sender.execute(sendMessage);
-                    });
-        }
+        return duration.getSeconds() < Duration.ofMinutes(2).getSeconds();
+    }
+
+    private void sendForecast(final String chatId, final ForecastType forecastType, final List<ForecastSource> sources, final User user) {
+        forecastServiceList.stream()
+                .filter(forecastService -> {
+                    if (sources.size() == 1 && sources.get(0).equals(ForecastSource.ALL)) {
+                        return true;
+                    } else {
+                        return sources.contains(forecastService.getSource());
+                    }
+                })
+                .map(forecastService -> {
+                    switch (forecastType) {
+                        case WEATHER:
+                            WeatherInfo weather = forecastService.getWeather(user);
+                            return List.of(weather.toRuWeatherResponse());
+                        case FORECAST:
+                            ForecastInfo forecast = forecastService.getForecast(user);
+                            return forecast.toRuForecastResponse();
+                        default:
+                            return List.of("Unexpected forecast type, check logs");
+                    }
+                })
+                .flatMap(List::stream)
+                .forEach(messageText -> {
+                    final var sendMessage = new SendMessage(chatId, messageText);
+                    sendMessage.setParseMode("Markdown");
+                    sender.execute(sendMessage);
+                });
     }
 }
