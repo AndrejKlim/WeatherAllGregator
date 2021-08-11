@@ -67,7 +67,7 @@ public class TimerService {
     private static boolean checkNotificationTime(ScheduledNotificationEntity notification) {
         final String timeZone = notification.getUser().getTimeZone();
         final ZonedDateTime nowZoned = ZonedDateTime.now().withZoneSameInstant(ZoneId.of(timeZone));
-        final LocalDateTime notificationTime = LocalDate.now().atTime(LocalTime.parse(notification.getNotificationTime()));
+        final LocalDateTime notificationTime = LocalDate.now().atTime(LocalTime.parse(notification.getNotificationTime())).withSecond(0);
         final Duration duration = Duration.between(nowZoned, notificationTime);
 
         return duration.getSeconds() < Duration.ofMinutes(2).getSeconds();
