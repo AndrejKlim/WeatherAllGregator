@@ -16,6 +16,7 @@ public class ScheduledNotificationMapper {
         dto.setUser(UserMapper.mapToUser(entity.getUser()));
         dto.setForecastType(entity.getForecastType());
         dto.setSources(entity.getSources());
+        dto.setExecuted(entity.getExecuted());
 
         return dto;
     }
@@ -27,6 +28,7 @@ public class ScheduledNotificationMapper {
         entity.setUser(UserMapper.mapToUserEntity(dto.getUser()));
         entity.setForecastType(dto.getForecastType());
         entity.setSources(dto.getSources());
+        entity.setExecuted(dto.getExecuted() != null && dto.getExecuted());
 
         return entity;
     }
