@@ -13,4 +13,5 @@ public class ScheduledNotification {
     private User user;
     private String forecastType;
     private String sources; // format - SOURCE,SOURCE,SOURCE...
+    private Boolean executed;
 }

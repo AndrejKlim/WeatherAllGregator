@@ -1,0 +1,1 @@
+alter table scheduled_notification add column executed bool not null default false;

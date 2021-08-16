@@ -40,9 +40,7 @@ public class TimerService {
 
     @Scheduled(fixedRate = 60000)
     public void runTasks() {
-        if (scheduledNotifications.size() < scheduledNotificationRepo.count()) {
-            fillNotificationsFromDb();
-        }
+        fillNotificationsFromDb();
 
         scheduledNotifications.stream()
                 .filter(TimerService::checkNotificationTime)
@@ -55,9 +53,11 @@ public class TimerService {
                             .collect(Collectors.toList());
                     User user = mapToUser(notification.getUser());
 
-
                     sendForecast(chatId, forecastType, sources, user);
+                    notification.setExecuted(true);
                 });
+
+        scheduledNotificationRepo.saveAll(scheduledNotifications);
     }
 
     private void fillNotificationsFromDb() {
@@ -65,12 +65,22 @@ public class TimerService {
     }
 
     private static boolean checkNotificationTime(ScheduledNotificationEntity notification) {
+        if (notification.getExecuted()) {
+            return false;
+        }
+
         final String timeZone = notification.getUser().getTimeZone();
         final ZonedDateTime nowZoned = ZonedDateTime.now().withZoneSameInstant(ZoneId.of(timeZone));
-        final LocalDateTime notificationTime = LocalDate.now().atTime(LocalTime.parse(notification.getNotificationTime())).withSecond(0);
-        final Duration duration = Duration.between(nowZoned, notificationTime);
+        final LocalDateTime notificationTime = LocalDate.now().atTime(LocalTime.parse(notification.getNotificationTime()));
+        final Duration duration = Duration.between(nowZoned.toLocalDateTime(), notificationTime);
 
-        return duration.getSeconds() < Duration.ofMinutes(2).getSeconds();
+        int secInMinute = 60;
+
+        if (duration.isNegative()) {
+            return duration.getSeconds() > -secInMinute;
+        } else {
+            return duration.getSeconds() < secInMinute;
+        }
     }
 
     private void sendForecast(final String chatId, final ForecastType forecastType, final List<ForecastSource> sources, final User user) {

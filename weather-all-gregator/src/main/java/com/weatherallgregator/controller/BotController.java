@@ -111,16 +111,15 @@ public class BotController {
             return chooseHours(update);
         }
         if (areHoursSet(update)) {
-            scheduledNotification.setNotificationTime(getPayloadFromUpdate(update));
+            String notificationTimeHours = addLeadingZeroToOneDigitInt(update);
+            scheduledNotification.setNotificationTime(notificationTimeHours);
+
             return chooseMinutes(update);
         }
         if (areMinutesSet(update)) {
-            var hours = scheduledNotification.getNotificationTime();
-            if (hours.length() == 1) {
-                hours = "0" + hours;
-            }
+            String notificationTimeMinutes = addLeadingZeroToOneDigitInt(update);
             scheduledNotification.setNotificationTime(
-                    hours + ":" + getPayloadFromUpdate(update));
+                    scheduledNotification.getNotificationTime() + ":" + notificationTimeMinutes);
             return chooseForecastType(update);
         }
         if (isForecastTypeSet(update)) {
@@ -128,6 +127,10 @@ public class BotController {
             return chooseForecastSources(update);
         }
         if (isForecastSourceSet(update)) {
+            if (getPayloadFromUpdate(update) == null){
+                scheduledNotification.setSources(ForecastSource.ALL.name());
+            }
+
             if (scheduledNotification.getSources() == null) {
                 scheduledNotification.setSources(getPayloadFromUpdate(update));
             } else {
@@ -144,13 +147,17 @@ public class BotController {
         return new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Неизвестная команда");
     }
 
+    public void deleteNotification(final Update update) {
+        scheduledNotificationService.delete(update.getCallbackQuery().getMessage().getChatId().toString());
+    }
+
     private boolean isStarted(final Update update) {
         return isEventHappened(update, STARTED);
     }
 
     private SendMessage chooseHours(final Update update) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        IntStream.range(0, 25).forEach(num -> {
+        IntStream.range(0, 24).forEach(num -> {
             var keyboardButton = new InlineKeyboardButton(String.valueOf(num));
             keyboardButton.setCallbackData(buildPipelineMessage(HOURS_SET, String.valueOf(num)));
             keyboard.add(List.of(keyboardButton));
@@ -173,7 +180,7 @@ public class BotController {
 
     private SendMessage chooseMinutes(final Update update) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        IntStream.iterate(0, i -> i <= 60, i -> i + 5)
+        IntStream.iterate(0, i -> i <= 55, i -> i + 5)
                 .forEach(num -> {
                     var keyboardButton = new InlineKeyboardButton(String.valueOf(num));
                     keyboardButton.setCallbackData(buildPipelineMessage(MINUTES_SET, String.valueOf(num)));
@@ -273,7 +280,11 @@ public class BotController {
         return update.getCallbackQuery().getData().split(";")[2];
     }
 
-    public void deleteNotification(final Update update) {
-        scheduledNotificationService.delete(update.getCallbackQuery().getMessage().getChatId().toString());
+    private String addLeadingZeroToOneDigitInt(final Update update) {
+        String notificationTimeHours = getPayloadFromUpdate(update);
+        if (notificationTimeHours.length() == 1) {
+            notificationTimeHours = "0" + notificationTimeHours;
+        }
+        return notificationTimeHours;
     }
 }

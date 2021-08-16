@@ -18,6 +18,8 @@ public class ScheduledNotificationEntity {
     private String forecastType;
     @Column(nullable = false)
     private String sources; // format - SOURCE,SOURCE,SOURCE...
+    @Column(nullable = false)
+    private Boolean executed;
 
     public String getChatId() {
         return chatId;
@@ -57,5 +59,13 @@ public class ScheduledNotificationEntity {
 
     public void setSources(final String sources) {
         this.sources = sources;
+    }
+
+    public Boolean getExecuted() {
+        return executed;
+    }
+
+    public void setExecuted(final Boolean executed) {
+        this.executed = executed;
     }
 }
