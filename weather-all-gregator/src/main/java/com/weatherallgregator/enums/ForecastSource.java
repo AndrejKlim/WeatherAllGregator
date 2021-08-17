@@ -4,7 +4,8 @@ public enum ForecastSource {
 
     ALL("Из всех источников"),
     YANDEX("Яндекс погода"),
-    OPEN_WEATHER("OpenWeather");
+    OPEN_WEATHER("OpenWeather"),
+    WEATHERBIT("Weatherbit.io");
 
     public final String value;
 
