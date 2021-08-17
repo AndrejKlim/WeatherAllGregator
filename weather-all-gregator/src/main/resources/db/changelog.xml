@@ -7,4 +7,5 @@
     <include file="changelog/open-weather-add.sql" relativeToChangelogFile="true"/>
     <include file="changelog/change-open-weather-api-call.sql" relativeToChangelogFile="true"/>
     <include file="changelog/add-is-executed-field-notification.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/add-weatherbit.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
