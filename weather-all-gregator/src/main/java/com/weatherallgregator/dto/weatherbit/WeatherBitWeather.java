@@ -23,7 +23,7 @@ public class WeatherBitWeather implements WeatherInfo {
         }
 
         WeatherData data = this.data.get(0);
-        return String.format("*Weatherbit.io*\n" +
+        return String.format("*Weatherbit*\n" +
                         "Погода на данный момент\n" +
                         "Температура - %.0f ℃\n" +
                         "Облачность или осадки - %s\n" +
