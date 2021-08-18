@@ -38,6 +38,18 @@ public class TimerService {
         this.forecastServiceList = forecastServiceList;
     }
 
+    @Scheduled(cron = "0 0 0 * * *")
+    public void resetExecutedFlag() {
+        List<ScheduledNotificationEntity> notifications = scheduledNotificationRepo.findAll();
+        for (ScheduledNotificationEntity notification : notifications) {
+            if (notification.getExecuted()){
+                notification.setExecuted(false);
+            }
+        }
+
+        scheduledNotificationRepo.saveAll(notifications);
+    }
+
     @Scheduled(fixedRate = 60000)
     public void runTasks() {
         fillNotificationsFromDb();
