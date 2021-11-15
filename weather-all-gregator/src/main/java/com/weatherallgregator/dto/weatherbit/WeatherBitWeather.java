@@ -25,11 +25,12 @@ public class WeatherBitWeather implements WeatherInfo {
         WeatherData data = this.data.get(0);
         return String.format("*Weatherbit*\n" +
                         "Погода на данный момент\n" +
-                        "Температура - %.0f ℃\n" +
+                        "Температура: %s%.0f ℃\n" +
                         "Облачность или осадки - %s\n" +
                         "Скорость ветра - %.1f м/с\n" +
                         "Давление - %d мм рт. ст.\n" +
                         "Влажность - %d %%",
+                data.getTemp() > 0 ? "+" : "-",
                 data.getTemp(),
                 data.getWeather().getDescription(),
                 data.getWindSpeed(),

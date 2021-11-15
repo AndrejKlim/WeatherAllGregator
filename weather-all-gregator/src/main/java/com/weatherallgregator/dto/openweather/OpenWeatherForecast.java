@@ -35,11 +35,12 @@ public class OpenWeatherForecast implements WeatherInfo, ForecastInfo {
     public String toRuWeatherResponse() {
         return String.format("*Open weather*\n" +
                         "Погода на данный момент\n" +
-                        "Температура - %.0f ℃\n" +
+                        "Температура: %s%.0f ℃\n" +
                         "Облачность или осадки - %s\n" +
                         "Скорость ветра - %d м/с\n" +
                         "Давление - %d мм рт. ст.\n" +
                         "Влажность - %d %%",
+                current.getTemp() > 0 ? "+" : "-",
                 current.getTemp(),
                 current.getWeather().get(0).getDescription(),
                 current.getWindSpeed(),
