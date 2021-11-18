@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -33,13 +32,14 @@ public class OpenWeatherForecast implements WeatherInfo, ForecastInfo {
 
     @Override
     public String toRuWeatherResponse() {
-        return String.format("*Open weather*\n" +
-                        "Погода на данный момент\n" +
-                        "Температура: %s%.0f ℃\n" +
-                        "Облачность или осадки - %s\n" +
-                        "Скорость ветра - %d м/с\n" +
-                        "Давление - %d мм рт. ст.\n" +
-                        "Влажность - %d %%",
+        return String.format("""
+                        *Open weather*
+                        Погода на данный момент
+                        Температура: %s%.0f ℃
+                        Облачность или осадки - %s
+                        Скорость ветра - %d м/с
+                        Давление - %d мм рт. ст.
+                        Влажность - %d %%""",
                 current.getTemp() > 0 ? "+" : "-",
                 current.getTemp(),
                 current.getWeather().get(0).getDescription(),
@@ -55,13 +55,14 @@ public class OpenWeatherForecast implements WeatherInfo, ForecastInfo {
             hourlyCut.add(hourly.get(i));
         }
         return hourlyCut.stream()
-                .map(hour -> String.format("*Open weather*\n" +
-                                "Погода на %s\n" +
-                                "Температура - %.0f ℃\n" +
-                                "Облачность или осадки - %s\n" +
-                                "Скорость ветра - %d м/с\n" +
-                                "Давление - %d мм рт. ст.\n" +
-                                "Влажность - %d %%",
+                .map(hour -> String.format("""
+                                *Open weather*
+                                Погода на %s
+                                Температура - %.0f ℃
+                                Облачность или осадки - %s
+                                Скорость ветра - %d м/с
+                                Давление - %d мм рт. ст.
+                                Влажность - %d %%""",
                         LocalDateTime.ofInstant(Instant.ofEpochSecond(hour.getDt()), ZoneId.of("GMT+3"))
                                 .format(TimeDayDateFormat.HOUR_DAY),
                         hour.getTemp(),
@@ -69,6 +70,6 @@ public class OpenWeatherForecast implements WeatherInfo, ForecastInfo {
                         hour.getWindSpeed(),
                         ConvertUtils.hPaToMm(hour.getPressure()),
                         hour.getHumidity()))
-                .collect(Collectors.toList());
+                .toList();
     }
 }
