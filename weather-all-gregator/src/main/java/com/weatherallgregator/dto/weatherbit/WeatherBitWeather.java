@@ -22,19 +22,20 @@ public class WeatherBitWeather implements WeatherInfo {
             return "Something wrong with WeatherBit weather response";
         }
 
-        WeatherData data = this.data.get(0);
-        return String.format("*Weatherbit*\n" +
-                        "Погода на данный момент\n" +
-                        "Температура: %s%.0f ℃\n" +
-                        "Облачность или осадки - %s\n" +
-                        "Скорость ветра - %.1f м/с\n" +
-                        "Давление - %d мм рт. ст.\n" +
-                        "Влажность - %d %%",
-                data.getTemp() > 0 ? "+" : "-",
-                data.getTemp(),
-                data.getWeather().getDescription(),
-                data.getWindSpeed(),
-                ConvertUtils.hPaToMm((int) data.getPressure()),
-                data.getRelativeHumidity());
+        WeatherData weatherData = this.data.get(0);
+        return String.format("""
+                        *Weatherbit*
+                        Погода на данный момент
+                        Температура: %s%.0f ℃
+                        Облачность или осадки - %s
+                        Скорость ветра - %.1f м/с
+                        Давление - %d мм рт. ст.
+                        Влажность - %d %%""",
+                weatherData.getTemp() > 0 ? "+" : "-",
+                weatherData.getTemp(),
+                weatherData.getWeather().getDescription(),
+                weatherData.getWindSpeed(),
+                ConvertUtils.hPaToMm((int) weatherData.getPressure()),
+                weatherData.getRelativeHumidity());
     }
 }

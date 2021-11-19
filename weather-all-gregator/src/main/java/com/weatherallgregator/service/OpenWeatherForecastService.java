@@ -10,6 +10,7 @@ import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.entity.ForecastEntity;
 import com.weatherallgregator.jpa.repo.ForecastRepo;
+import com.weatherallgregator.mapper.OpenWeatherMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -41,14 +42,14 @@ public class OpenWeatherForecastService extends ForecastService{
     @Override
     public WeatherInfo getWeather(final User user) {
         return getOpenWeatherForecast(user, WEATHER)
-                .map(f -> (WeatherInfo) f)
+                .map(WeatherInfo.class::cast)
                 .orElse(() -> NO_INFO);
     }
 
     @Override
     public ForecastInfo getForecast(final User user) {
         return getOpenWeatherForecast(user, FORECAST)
-                .map(f -> (ForecastInfo) f)
+                .map(ForecastInfo.class::cast)
                 .orElse(() -> List.of(NO_INFO));
     }
 
@@ -74,15 +75,16 @@ public class OpenWeatherForecastService extends ForecastService{
         }
 
         log.info("Getting new forecast from api, saving and returning to bot");
-        String jsonResponse = apiClient.getCurrentWeather(forecastLocation.getLat().toString(),
+        Optional<String> jsonResponse = apiClient.getCurrentWeather(forecastLocation.getLat().toString(),
                 forecastLocation.getLon().toString());
-        apiCallCounterService.incrementApiCallCounter(OPEN_WEATHER);
-        ForecastEntity entity = new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
-                jsonResponse,
-                OPEN_WEATHER.name(),
-                mapToForecastLocationEntity(forecastLocation));
-        repo.save(entity);
 
-        return Optional.ofNullable(readForecast(entity));
+        jsonResponse.ifPresent(s -> apiCallCounterService.incrementApiCallCounter(OPEN_WEATHER));
+
+        Optional<ForecastEntity> entity = jsonResponse
+                .map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC), json,
+                        OPEN_WEATHER.name(), mapToForecastLocationEntity(forecastLocation)));
+        entity.ifPresent(repo::save);
+
+        return entity.map(OpenWeatherMapper::readForecast);
     }
 }

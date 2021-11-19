@@ -10,6 +10,7 @@ import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.entity.ForecastEntity;
 import com.weatherallgregator.jpa.repo.ForecastRepo;
+import com.weatherallgregator.mapper.WeatherBitMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +41,7 @@ public class WeatherBitService extends ForecastService{
     @Override
     public WeatherInfo getWeather(final User user) {
         return getWeatherBitWeather(user, WEATHER)
-                .map(w -> (WeatherInfo) w)
+                .map(WeatherInfo.class::cast)
                 .orElse(() -> NO_INFO);
     }
 
@@ -71,15 +72,16 @@ public class WeatherBitService extends ForecastService{
         }
 
         log.info("Getting new forecast from api, saving and returning to bot");
-        String jsonResponse = apiClient.getCurrentWeather(forecastLocation.getLat().toString(),
+        Optional<String> jsonResponse = apiClient.getCurrentWeather(forecastLocation.getLat().toString(),
                 forecastLocation.getLon().toString());
-        apiCallCounterService.incrementApiCallCounter(WEATHERBIT);
-        ForecastEntity entity = new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
-                jsonResponse,
-                WEATHERBIT.name(),
-                mapToForecastLocationEntity(forecastLocation));
-        repo.save(entity);
 
-        return Optional.ofNullable(readForecast(entity));
+        jsonResponse.ifPresent(json -> apiCallCounterService.incrementApiCallCounter(WEATHERBIT));
+        Optional<ForecastEntity> entity = jsonResponse.map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+                json,
+                WEATHERBIT.name(),
+                mapToForecastLocationEntity(forecastLocation)));
+        entity.ifPresent(repo::save);
+
+        return entity.map(WeatherBitMapper::readForecast);
     }
 }

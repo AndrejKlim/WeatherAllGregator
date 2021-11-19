@@ -13,7 +13,6 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -28,13 +27,14 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
 
     @Override
     public String toRuWeatherResponse() {
-        return String.format("*Яндекс погода*\n" +
-                        "Погода на данный момент\n" +
-                        "Температура: %s%d ℃\n" +
-                        "Облачность или осадки - %s\n" +
-                        "Скорость ветра - %d м/с\n" +
-                        "Давление - %d мм рт. ст.\n" +
-                        "Влажность - %d %%",
+        return String.format("""
+                        *Яндекс погода*
+                        Погода на данный момент
+                        Температура: %s%d ℃
+                        Облачность или осадки - %s
+                        Скорость ветра - %d м/с
+                        Давление - %d мм рт. ст.
+                        Влажность - %d %%""",
                 fact.getTemp() > 0 ? "+" : "-",
                 fact.getTemp(),
                 ConditionRu.valueOf(Condition.valueOfCondition(fact.getCondition()).name()).value,
@@ -46,15 +46,16 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
     @Override
     public List<String> toRuForecastResponse() {
         return forecast.getParts().stream()
-                .map(p -> String.format("*Яндекс погода*\n" +
-                                "Погода на %s\n" +
-                                "Средняя температура - %d ℃\n" +
-                                "Облачность или осадки - %s\n" +
-                                "Скорость ветра - %.1f м/с\n" +
-                                "Давление - %d мм рт. ст.\n" +
-                                "Влажность - %d %%\n" +
-                                "Вероятность осадков - %d %%\n" +
-                                "Объем вероятных осадков - %d мм",
+                .map(p -> String.format("""
+                                *Яндекс погода*
+                                Погода на %s
+                                Средняя температура - %d ℃
+                                Облачность или осадки - %s
+                                Скорость ветра - %.1f м/с
+                                Давление - %d мм рт. ст.
+                                Влажность - %d %%
+                                Вероятность осадков - %d %%
+                                Объем вероятных осадков - %d мм""",
                         DayTimeRu.valueOf(DayTime.valueOfDayTime(p.getPartName()).name()).value,
                         p.getTempAvg(),
                         ConditionRu.valueOf(Condition.valueOfCondition(p.getCondition()).name()).value,
@@ -63,6 +64,6 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
                         p.getHumidity(),
                         p.getPrecProb(),
                         p.getPrecMm()))
-                .collect(Collectors.toList());
+                .toList();
     }
 }

@@ -17,7 +17,6 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.weatherallgregator.mapper.UserMapper.mapToUser;
 
@@ -62,7 +61,7 @@ public class TimerService {
                     ForecastType forecastType = ForecastType.valueOfType(notification.getForecastType());
                     List<ForecastSource> sources = Arrays.stream(notification.getSources().split(","))
                             .map(ForecastSource::valueOf)
-                            .collect(Collectors.toList());
+                            .toList();
                     User user = mapToUser(notification.getUser());
 
                     sendForecast(chatId, forecastType, sources, user);
