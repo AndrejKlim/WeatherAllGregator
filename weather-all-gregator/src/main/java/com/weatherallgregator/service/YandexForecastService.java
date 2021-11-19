@@ -10,6 +10,7 @@ import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.entity.ForecastEntity;
 import com.weatherallgregator.jpa.repo.ForecastRepo;
+import com.weatherallgregator.mapper.YandexForecastMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -74,15 +75,15 @@ public class YandexForecastService extends ForecastService{
         }
 
         log.info("Getting new forecast from api, saving and returning to bot");
-        String jsonResponse = apiClient.getForecast(forecastLocation.getLat().toString(),
+        Optional<String> jsonResponse = apiClient.getForecast(forecastLocation.getLat().toString(),
                 forecastLocation.getLon().toString());
-        apiCallCounterService.incrementApiCallCounter(YANDEX);
-        ForecastEntity entity = new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
-                jsonResponse,
+        jsonResponse.ifPresent(json -> apiCallCounterService.incrementApiCallCounter(YANDEX));
+        Optional<ForecastEntity> entity = jsonResponse.map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+                json,
                 YANDEX.name(),
-                mapToForecastLocationEntity(forecastLocation));
-        repo.save(entity);
+                mapToForecastLocationEntity(forecastLocation)));
+        entity.ifPresent(repo::save);
 
-        return Optional.ofNullable(readForecast(entity));
+        return entity.map(YandexForecastMapper::readForecast);
     }
 }
