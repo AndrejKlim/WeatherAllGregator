@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.weatherallgregator.enums.ScheduledNotificationCreatingPipeline.*;
@@ -79,7 +78,7 @@ public class BotController {
                 .map(u -> forecastServiceList.stream()
                         .map(fs -> fs.getWeather(mapToUser(u)))
                         .map(WeatherInfo::toRuWeatherResponse)
-                        .collect(Collectors.toList()))
+                        .toList())
                 .orElse(List.of("Error during retrieving forecast"));
     }
 
@@ -93,7 +92,7 @@ public class BotController {
                         .map(fs -> fs.getForecast(mapToUser(u)))
                         .map(ForecastInfo::toRuForecastResponse)
                         .flatMap(List::stream)
-                        .collect(Collectors.toList()))
+                        .toList())
                 .orElse(List.of("Error during retrieving forecast"));
     }
 

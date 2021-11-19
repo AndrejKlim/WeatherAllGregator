@@ -42,14 +42,14 @@ public class OpenWeatherForecastService extends ForecastService{
     @Override
     public WeatherInfo getWeather(final User user) {
         return getOpenWeatherForecast(user, WEATHER)
-                .map(f -> (WeatherInfo) f)
+                .map(WeatherInfo.class::cast)
                 .orElse(() -> NO_INFO);
     }
 
     @Override
     public ForecastInfo getForecast(final User user) {
         return getOpenWeatherForecast(user, FORECAST)
-                .map(f -> (ForecastInfo) f)
+                .map(ForecastInfo.class::cast)
                 .orElse(() -> List.of(NO_INFO));
     }
 

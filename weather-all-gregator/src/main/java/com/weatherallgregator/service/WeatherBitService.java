@@ -41,7 +41,7 @@ public class WeatherBitService extends ForecastService{
     @Override
     public WeatherInfo getWeather(final User user) {
         return getWeatherBitWeather(user, WEATHER)
-                .map(w -> (WeatherInfo) w)
+                .map(WeatherInfo.class::cast)
                 .orElse(() -> NO_INFO);
     }
 

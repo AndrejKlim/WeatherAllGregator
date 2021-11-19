@@ -8,12 +8,14 @@ import java.util.Map;
 
 public class TimeDayDateFormat {
 
+    private TimeDayDateFormat() {
+    }
 
     public static final DateTimeFormatter HOUR_DAY;
 
     static {
         Map<Long, String> dow = new HashMap<>();
-        dow.put(1L,"Понедельние");
+        dow.put(1L,"Понедельник");
         dow.put(2L,"Вторник");
         dow.put(3L,"Среда");
         dow.put(4L,"Четверг");

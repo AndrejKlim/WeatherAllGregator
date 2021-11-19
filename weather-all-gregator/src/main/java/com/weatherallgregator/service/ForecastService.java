@@ -19,7 +19,7 @@ public abstract class ForecastService {
     protected final ForecastRepo repo;
     protected final ApiCallCounterService apiCallCounterService;
 
-    public ForecastService(final ForecastRepo repo, final ApiCallCounterService apiCallCounterService) {
+    protected ForecastService(final ForecastRepo repo, final ApiCallCounterService apiCallCounterService) {
         this.repo = repo;
         this.apiCallCounterService = apiCallCounterService;
     }

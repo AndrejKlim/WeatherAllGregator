@@ -17,7 +17,7 @@ public abstract class ApiClient {
     this.restTemplate = restTemplate;
   }
 
-  public String sendGet(String url, HttpEntity entity, Map<String, String> params) {
+  public String sendGet(String url, HttpEntity<?> entity, Map<String, String> params) {
 
     log.info("Request entity = {}\n params = {}", entity, params);
     String weather = null;

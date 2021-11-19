@@ -38,18 +38,20 @@ public class ApiCallCounterService {
 
     private boolean needsReset(Optional<ApiCallCounter> apiCallCounter) {
         return apiCallCounter.isPresent()
-                && apiCallCounter.get().getCounterResetAt() < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+               && apiCallCounter.get().getCounterResetAt() < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
     }
 
     private void resetCounter(Optional<ApiCallCounter> apiCallCounter) {
         var newResetTime =
                 LocalDateTime.now().plusDays(1).withHour(7).withMinute(0).withSecond(0).truncatedTo(ChronoUnit.SECONDS);
 
-        apiCallCounter.get().setCounterResetAt(newResetTime.toEpochSecond(ZoneOffset.UTC));
-        apiCallCounter.get().setCounter(0);
+        apiCallCounter.ifPresent(counter -> {
+            counter.setCounterResetAt(newResetTime.toEpochSecond(ZoneOffset.UTC));
+            counter.setCounter(0);
+            repo.save(counter);
 
-        repo.save(apiCallCounter.get());
-        log.info("{} Counter reset", apiCallCounter.get().getApi());
+            log.info("{} Counter reset", counter.getApi());
+        });
     }
 
 }
