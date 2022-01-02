@@ -30,12 +30,11 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
         return String.format("""
                         *Яндекс погода*
                         Погода на данный момент
-                        Температура: %s%d ℃
+                        Температура: %d ℃
                         Облачность или осадки - %s
                         Скорость ветра - %d м/с
                         Давление - %d мм рт. ст.
                         Влажность - %d %%""",
-                fact.getTemp() > 0 ? "+" : "-",
                 fact.getTemp(),
                 ConditionRu.valueOf(Condition.valueOfCondition(fact.getCondition()).name()).value,
                 fact.getWindSpeed(),
@@ -45,8 +44,7 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
 
     @Override
     public List<String> toRuForecastResponse() {
-        return forecast.getParts().stream()
-                .map(p -> String.format("""
+        final String forecastTemplate = """
                                 *Яндекс погода*
                                 Погода на %s
                                 Средняя температура - %d ℃
@@ -55,7 +53,9 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
                                 Давление - %d мм рт. ст.
                                 Влажность - %d %%
                                 Вероятность осадков - %d %%
-                                Объем вероятных осадков - %d мм""",
+                                Объем вероятных осадков - %d мм""";
+        return forecast.getParts().stream()
+                .map(p -> String.format(forecastTemplate,
                         DayTimeRu.valueOf(DayTime.valueOfDayTime(p.getPartName()).name()).value,
                         p.getTempAvg(),
                         ConditionRu.valueOf(Condition.valueOfCondition(p.getCondition()).name()).value,

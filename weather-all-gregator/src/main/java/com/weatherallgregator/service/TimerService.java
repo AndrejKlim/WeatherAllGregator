@@ -41,7 +41,7 @@ public class TimerService {
     public void resetExecutedFlag() {
         List<ScheduledNotificationEntity> notifications = scheduledNotificationRepo.findAll();
         for (ScheduledNotificationEntity notification : notifications) {
-            if (notification.getExecuted()){
+            if (Boolean.TRUE.equals(notification.getExecuted())){
                 notification.setExecuted(false);
             }
         }
@@ -76,7 +76,7 @@ public class TimerService {
     }
 
     private static boolean checkNotificationTime(ScheduledNotificationEntity notification) {
-        if (notification.getExecuted()) {
+        if (Boolean.TRUE.equals(notification.getExecuted())) {
             return false;
         }
 
