@@ -30,12 +30,11 @@ public class YandexForecast implements WeatherInfo, ForecastInfo {
         return String.format("""
                         *Яндекс погода*
                         Погода на данный момент
-                        Температура: %s%d ℃
+                        Температура: %d ℃
                         Облачность или осадки - %s
                         Скорость ветра - %d м/с
                         Давление - %d мм рт. ст.
                         Влажность - %d %%""",
-                fact.getTemp() > 0 ? "+" : "-",
                 fact.getTemp(),
                 ConditionRu.valueOf(Condition.valueOfCondition(fact.getCondition()).name()).value,
                 fact.getWindSpeed(),
