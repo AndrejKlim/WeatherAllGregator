@@ -11,7 +11,7 @@ import com.weatherallgregator.jpa.entity.ScheduledNotificationEntity;
 import com.weatherallgregator.jpa.entity.UserEntity;
 import com.weatherallgregator.jpa.repo.UserRepo;
 import com.weatherallgregator.service.ForecastLocationService;
-import com.weatherallgregator.service.ForecastService;
+import com.weatherallgregator.service.forecast.ForecastService;
 import com.weatherallgregator.service.ScheduledNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

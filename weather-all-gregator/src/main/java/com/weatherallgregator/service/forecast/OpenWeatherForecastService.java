@@ -1,16 +1,17 @@
-package com.weatherallgregator.service;
+package com.weatherallgregator.service.forecast;
 
-import com.weatherallgregator.client.YandexApiClient;
+import com.weatherallgregator.client.OpenWeatherApiClient;
 import com.weatherallgregator.dto.ForecastInfo;
 import com.weatherallgregator.dto.ForecastLocation;
 import com.weatherallgregator.dto.User;
 import com.weatherallgregator.dto.WeatherInfo;
-import com.weatherallgregator.dto.yandex.YandexForecast;
+import com.weatherallgregator.dto.openweather.OpenWeatherForecast;
 import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.entity.ForecastEntity;
 import com.weatherallgregator.jpa.repo.ForecastRepo;
-import com.weatherallgregator.mapper.YandexForecastMapper;
+import com.weatherallgregator.mapper.OpenWeatherMapper;
+import com.weatherallgregator.service.ApiCallCounterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,71 +20,72 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
-import static com.weatherallgregator.enums.ForecastSource.YANDEX;
+import static com.weatherallgregator.enums.ForecastSource.OPEN_WEATHER;
 import static com.weatherallgregator.enums.ForecastType.FORECAST;
 import static com.weatherallgregator.enums.ForecastType.WEATHER;
 import static com.weatherallgregator.mapper.ForecastLocationMapper.mapToForecastLocationEntity;
-import static com.weatherallgregator.mapper.YandexForecastMapper.readForecast;
+import static com.weatherallgregator.mapper.OpenWeatherMapper.readForecast;
 
 @Component
 @Slf4j
-public class YandexForecastService extends ForecastService{
+public class OpenWeatherForecastService extends ForecastService{
 
     public static final String NO_INFO = "No info";
-    private final YandexApiClient apiClient;
+    private final OpenWeatherApiClient apiClient;
 
-    public YandexForecastService(final ForecastRepo repo,
-                                 final ApiCallCounterService apiCallCounterService,
-                                 final YandexApiClient apiClient) {
+    public OpenWeatherForecastService(final ForecastRepo repo,
+                                      final ApiCallCounterService apiCallCounterService,
+                                      final OpenWeatherApiClient apiClient) {
         super(repo, apiCallCounterService);
         this.apiClient = apiClient;
     }
 
     @Override
     public WeatherInfo getWeather(final User user) {
-        return getYandexForecast(user, WEATHER)
+        return getOpenWeatherForecast(user, WEATHER)
                 .map(WeatherInfo.class::cast)
                 .orElse(() -> NO_INFO);
     }
 
     @Override
     public ForecastInfo getForecast(final User user) {
-        return getYandexForecast(user, FORECAST)
+        return getOpenWeatherForecast(user, FORECAST)
                 .map(ForecastInfo.class::cast)
                 .orElse(() -> List.of(NO_INFO));
     }
 
     @Override
     public ForecastSource getSource() {
-        return YANDEX;
+        return OPEN_WEATHER;
     }
 
-    public Optional<YandexForecast> getYandexForecast(final User user, final ForecastType forecastType) {
+    public Optional<OpenWeatherForecast> getOpenWeatherForecast(final User user, final ForecastType forecastType) {
         ForecastLocation forecastLocation = user.getForecastLocation();
         Optional<ForecastEntity> lastForecastByLocation =
                 repo.findFirstByForecastLocationAndSource(mapToForecastLocationEntity(forecastLocation),
-                        YANDEX.name(),
+                        OPEN_WEATHER.name(),
                         SORT_DESC_BY_CREATED_AT);
 
-        if (lastForecastByLocation.isPresent() && !isExpired(lastForecastByLocation.get(), forecastType)) {
+        if (lastForecastByLocation.isPresent() && !isExpired(lastForecastByLocation.get(), forecastType)){
             log.info("Suitable and not expired forecast found in storage, returning it. {}", lastForecastByLocation.get());
             return Optional.ofNullable(readForecast(lastForecastByLocation.get()));
         }
-        if (!apiCallCounterService.canApiCallBePerformed(YANDEX)) {
+        if (!apiCallCounterService.canApiCallBePerformed(OPEN_WEATHER)) {
             log.info("Api call limit reached");
             return Optional.empty();
         }
 
         log.info("Getting new forecast from api, saving and returning to bot");
-        Optional<String> jsonResponse = apiClient.getForecast(forecastLocation.getLat().toString(),
+        Optional<String> jsonResponse = apiClient.getCurrentWeather(forecastLocation.getLat().toString(),
                 forecastLocation.getLon().toString());
-        jsonResponse.ifPresent(json -> apiCallCounterService.incrementApiCallCounter(YANDEX));
-        Optional<ForecastEntity> entity = jsonResponse.map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
-                json,
-                YANDEX.name(),
-                mapToForecastLocationEntity(forecastLocation)));
+
+        jsonResponse.ifPresent(s -> apiCallCounterService.incrementApiCallCounter(OPEN_WEATHER));
+
+        Optional<ForecastEntity> entity = jsonResponse
+                .map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC), json,
+                        OPEN_WEATHER.name(), mapToForecastLocationEntity(forecastLocation)));
         entity.ifPresent(repo::save);
 
-        return entity.map(YandexForecastMapper::readForecast);
+        return entity.map(OpenWeatherMapper::readForecast);
     }
 }

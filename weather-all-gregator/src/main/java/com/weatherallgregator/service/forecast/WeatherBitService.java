@@ -1,16 +1,17 @@
-package com.weatherallgregator.service;
+package com.weatherallgregator.service.forecast;
 
-import com.weatherallgregator.client.OpenWeatherApiClient;
+import com.weatherallgregator.client.WeatherBitApiClient;
 import com.weatherallgregator.dto.ForecastInfo;
 import com.weatherallgregator.dto.ForecastLocation;
 import com.weatherallgregator.dto.User;
 import com.weatherallgregator.dto.WeatherInfo;
-import com.weatherallgregator.dto.openweather.OpenWeatherForecast;
+import com.weatherallgregator.dto.weatherbit.WeatherBitWeather;
 import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.entity.ForecastEntity;
 import com.weatherallgregator.jpa.repo.ForecastRepo;
-import com.weatherallgregator.mapper.OpenWeatherMapper;
+import com.weatherallgregator.mapper.WeatherBitMapper;
+import com.weatherallgregator.service.ApiCallCounterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,57 +20,54 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
-import static com.weatherallgregator.enums.ForecastSource.OPEN_WEATHER;
-import static com.weatherallgregator.enums.ForecastType.FORECAST;
+import static com.weatherallgregator.enums.ForecastSource.WEATHERBIT;
 import static com.weatherallgregator.enums.ForecastType.WEATHER;
 import static com.weatherallgregator.mapper.ForecastLocationMapper.mapToForecastLocationEntity;
-import static com.weatherallgregator.mapper.OpenWeatherMapper.readForecast;
+import static com.weatherallgregator.mapper.WeatherBitMapper.readForecast;
 
 @Component
 @Slf4j
-public class OpenWeatherForecastService extends ForecastService{
+public class WeatherBitService extends ForecastService{
 
     public static final String NO_INFO = "No info";
-    private final OpenWeatherApiClient apiClient;
+    private final WeatherBitApiClient apiClient;
 
-    public OpenWeatherForecastService(final ForecastRepo repo,
-                                      final ApiCallCounterService apiCallCounterService,
-                                      final OpenWeatherApiClient apiClient) {
+    public WeatherBitService(final ForecastRepo repo,
+                             final ApiCallCounterService apiCallCounterService,
+                             final WeatherBitApiClient apiClient) {
         super(repo, apiCallCounterService);
         this.apiClient = apiClient;
     }
 
     @Override
     public WeatherInfo getWeather(final User user) {
-        return getOpenWeatherForecast(user, WEATHER)
+        return getWeatherBitWeather(user, WEATHER)
                 .map(WeatherInfo.class::cast)
                 .orElse(() -> NO_INFO);
     }
 
     @Override
     public ForecastInfo getForecast(final User user) {
-        return getOpenWeatherForecast(user, FORECAST)
-                .map(ForecastInfo.class::cast)
-                .orElse(() -> List.of(NO_INFO));
+        return () -> List.of(NO_INFO);
     }
 
     @Override
     public ForecastSource getSource() {
-        return OPEN_WEATHER;
+        return WEATHERBIT;
     }
 
-    public Optional<OpenWeatherForecast> getOpenWeatherForecast(final User user, final ForecastType forecastType) {
+    public Optional<WeatherBitWeather> getWeatherBitWeather(final User user, final ForecastType forecastType) {
         ForecastLocation forecastLocation = user.getForecastLocation();
         Optional<ForecastEntity> lastForecastByLocation =
                 repo.findFirstByForecastLocationAndSource(mapToForecastLocationEntity(forecastLocation),
-                        OPEN_WEATHER.name(),
+                        WEATHERBIT.name(),
                         SORT_DESC_BY_CREATED_AT);
 
         if (lastForecastByLocation.isPresent() && !isExpired(lastForecastByLocation.get(), forecastType)){
             log.info("Suitable and not expired forecast found in storage, returning it. {}", lastForecastByLocation.get());
             return Optional.ofNullable(readForecast(lastForecastByLocation.get()));
         }
-        if (!apiCallCounterService.canApiCallBePerformed(OPEN_WEATHER)) {
+        if (!apiCallCounterService.canApiCallBePerformed(WEATHERBIT)) {
             log.info("Api call limit reached");
             return Optional.empty();
         }
@@ -78,13 +76,13 @@ public class OpenWeatherForecastService extends ForecastService{
         Optional<String> jsonResponse = apiClient.getCurrentWeather(forecastLocation.getLat().toString(),
                 forecastLocation.getLon().toString());
 
-        jsonResponse.ifPresent(s -> apiCallCounterService.incrementApiCallCounter(OPEN_WEATHER));
-
-        Optional<ForecastEntity> entity = jsonResponse
-                .map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC), json,
-                        OPEN_WEATHER.name(), mapToForecastLocationEntity(forecastLocation)));
+        jsonResponse.ifPresent(json -> apiCallCounterService.incrementApiCallCounter(WEATHERBIT));
+        Optional<ForecastEntity> entity = jsonResponse.map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+                json,
+                WEATHERBIT.name(),
+                mapToForecastLocationEntity(forecastLocation)));
         entity.ifPresent(repo::save);
 
-        return entity.map(OpenWeatherMapper::readForecast);
+        return entity.map(WeatherBitMapper::readForecast);
     }
 }

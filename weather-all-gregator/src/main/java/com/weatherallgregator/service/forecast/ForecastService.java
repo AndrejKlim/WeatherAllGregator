@@ -1,4 +1,4 @@
-package com.weatherallgregator.service;
+package com.weatherallgregator.service.forecast;
 
 import com.weatherallgregator.dto.ForecastInfo;
 import com.weatherallgregator.dto.User;
@@ -7,6 +7,7 @@ import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.entity.ForecastEntity;
 import com.weatherallgregator.jpa.repo.ForecastRepo;
+import com.weatherallgregator.service.ApiCallCounterService;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
