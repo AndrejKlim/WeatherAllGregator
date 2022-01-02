@@ -53,15 +53,16 @@ public class OpenWeatherForecast implements WeatherInfo, ForecastInfo {
         for (int i = 0; i < hourly.size(); i += 6 ) {
             hourlyCut.add(hourly.get(i));
         }
-        return hourlyCut.stream()
-                .map(hour -> String.format("""
+        final String forecastTemplate = """
                                 *Open weather*
                                 Погода на %s
                                 Температура - %.0f ℃
                                 Облачность или осадки - %s
                                 Скорость ветра - %d м/с
                                 Давление - %d мм рт. ст.
-                                Влажность - %d %%""",
+                                Влажность - %d %%""";
+        return hourlyCut.stream()
+                .map(hour -> String.format(forecastTemplate,
                         LocalDateTime.ofInstant(Instant.ofEpochSecond(hour.getDt()), ZoneId.of("GMT+3"))
                                 .format(TimeDayDateFormat.HOUR_DAY),
                         hour.getTemp(),
