@@ -11,6 +11,7 @@ import com.weatherallgregator.jpa.entity.ScheduledNotificationEntity;
 import com.weatherallgregator.jpa.entity.UserEntity;
 import com.weatherallgregator.jpa.repo.UserRepo;
 import com.weatherallgregator.service.ForecastLocationService;
+import com.weatherallgregator.service.HumidityPlotService;
 import com.weatherallgregator.service.forecast.ForecastService;
 import com.weatherallgregator.service.ScheduledNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ public class BotController {
     private final List<ForecastService> forecastServiceList;
     private final ForecastLocationService forecastLocationService;
     private final ScheduledNotificationService scheduledNotificationService;
+    private final HumidityPlotService plotService;
     private final UserRepo userRepo;
     private ScheduledNotification scheduledNotification;
 
@@ -285,5 +288,9 @@ public class BotController {
             notificationTimeHours = "0" + notificationTimeHours;
         }
         return notificationTimeHours;
+    }
+
+    public InputStream getHumidityPlot(final Update update) {
+        return plotService.humidityPlot();
     }
 }

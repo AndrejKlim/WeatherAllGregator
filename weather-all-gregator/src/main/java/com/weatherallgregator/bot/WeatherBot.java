@@ -11,16 +11,24 @@ import org.telegram.abilitybots.api.objects.Ability;
 import org.telegram.abilitybots.api.objects.Locality;
 import org.telegram.abilitybots.api.objects.Privacy;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.weatherallgregator.enums.BotCommands.*;
 import static com.weatherallgregator.enums.ScheduledNotificationCreatingPipeline.SN_PIPELINE;
 import static com.weatherallgregator.enums.ScheduledNotificationCreatingPipeline.STARTED;
 
@@ -50,13 +58,13 @@ public class WeatherBot extends AbilityBot {
                 .privacy(Privacy.PUBLIC)
                 .action(mc -> {
                     var locationButton = new InlineKeyboardButton("Установить локацию для прогноза");
-                    locationButton.setCallbackData(BotCommands.SET_LOCATION.name());
+                    locationButton.setCallbackData(SET_LOCATION.name());
 
                     var forecastButton = new InlineKeyboardButton("Ближайший прогноз");
-                    forecastButton.setCallbackData(BotCommands.FORECAST.name());
+                    forecastButton.setCallbackData(FORECAST.name());
 
                     var currentButton = new InlineKeyboardButton("Погода на настоящий момент");
-                    currentButton.setCallbackData(BotCommands.WEATHER.name());
+                    currentButton.setCallbackData(WEATHER.name());
 
                     var scheduleButton = new InlineKeyboardButton("Запланировать уведомления о погоде");
                     scheduleButton.setCallbackData(String.format("%s;%s;%s",
@@ -65,7 +73,10 @@ public class WeatherBot extends AbilityBot {
                             ""));
 
                     var deleteNotificationButton = new InlineKeyboardButton("Удалить уведомление");
-                    deleteNotificationButton.setCallbackData(BotCommands.DELETE_NOTIFICATION.name());
+                    deleteNotificationButton.setCallbackData(DELETE_NOTIFICATION.name());
+
+                    var humidityPlotBtn = new InlineKeyboardButton("График давления");
+                    humidityPlotBtn.setCallbackData(HUMIDITY_PLOT.name());
 
                     List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
                     keyboard.add(List.of(currentButton));
@@ -73,6 +84,7 @@ public class WeatherBot extends AbilityBot {
                     keyboard.add(List.of(scheduleButton));
                     keyboard.add(List.of(deleteNotificationButton));
                     keyboard.add(List.of(locationButton));
+                    keyboard.add(List.of(humidityPlotBtn));
 
                     var keyboardMarkup = new InlineKeyboardMarkup();
                     keyboardMarkup.setKeyboard(keyboard);
@@ -99,14 +111,21 @@ public class WeatherBot extends AbilityBot {
         if (isForecastRequested(update)) {
             getForecast(update);
         } // FIXME: 2.08.21 may be show menu dialog after weather and forecast messages
-        if (isWeatherRequested(update)){
+        if (isWeatherRequested(update)) {
             getWeather(update);
         }
-        if (isLocationSetRequested(update)){
+        if (isLocationSetRequested(update)) {
             getLocationButton(update);
         }
-        if (isDeletingNotificationRequested(update)){
+        if (isDeletingNotificationRequested(update)) {
             deleteNotification(update);
+        }
+        if (isHumidityPlotRequested(update)) {
+            try {
+                getHumidityPlot(update);
+            } catch (TelegramApiException | FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
 
         if (isScheduledNotificationCreatingPipeline(update)) {
@@ -126,19 +145,23 @@ public class WeatherBot extends AbilityBot {
     }
 
     private boolean isForecastRequested(final Update update) {
-        return checkBotCommand(update, BotCommands.FORECAST);
+        return checkBotCommand(update, FORECAST);
     }
 
     private boolean isWeatherRequested(final Update update) {
-        return checkBotCommand(update, BotCommands.WEATHER);
+        return checkBotCommand(update, WEATHER);
     }
 
     private boolean isLocationSetRequested(final Update update) {
-        return checkBotCommand(update, BotCommands.SET_LOCATION);
+        return checkBotCommand(update, SET_LOCATION);
     }
 
     private boolean isDeletingNotificationRequested(final Update update) {
-        return checkBotCommand(update, BotCommands.DELETE_NOTIFICATION);
+        return checkBotCommand(update, DELETE_NOTIFICATION);
+    }
+
+    private boolean isHumidityPlotRequested(final Update update) {
+        return checkBotCommand(update, HUMIDITY_PLOT);
     }
 
     private boolean isScheduledNotificationCreatingPipeline(Update update) {
@@ -186,6 +209,14 @@ public class WeatherBot extends AbilityBot {
     private void deleteNotification(final Update update) {
         botController.deleteNotification(update);
         silent.execute(new SendMessage(getChatId(update), "Удалено"));
+    }
+
+    private void getHumidityPlot(final Update update) throws TelegramApiException, FileNotFoundException {
+        final InputStream humidityPlot = botController.getHumidityPlot(update);
+        var message = new SendPhoto();
+        message.setChatId(getChatId(update));
+        message.setPhoto(new InputFile(humidityPlot, "humidity plot"));
+        this.execute(message);
     }
 
     @NotNull
