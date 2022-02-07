@@ -11,7 +11,7 @@ import com.weatherallgregator.jpa.entity.ScheduledNotificationEntity;
 import com.weatherallgregator.jpa.entity.UserEntity;
 import com.weatherallgregator.jpa.repo.UserRepo;
 import com.weatherallgregator.service.ForecastLocationService;
-import com.weatherallgregator.service.HumidityPlotService;
+import com.weatherallgregator.service.PressurePlotService;
 import com.weatherallgregator.service.forecast.ForecastService;
 import com.weatherallgregator.service.ScheduledNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class BotController {
     private final List<ForecastService> forecastServiceList;
     private final ForecastLocationService forecastLocationService;
     private final ScheduledNotificationService scheduledNotificationService;
-    private final HumidityPlotService plotService;
+    private final PressurePlotService plotService;
     private final UserRepo userRepo;
     private ScheduledNotification scheduledNotification;
 
@@ -291,6 +291,6 @@ public class BotController {
     }
 
     public InputStream getHumidityPlot(final Update update) {
-        return plotService.humidityPlot();
+        return plotService.pressurePlot();
     }
 }
