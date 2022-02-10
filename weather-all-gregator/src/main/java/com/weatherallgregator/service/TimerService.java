@@ -8,6 +8,7 @@ import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
 import com.weatherallgregator.jpa.entity.ScheduledNotificationEntity;
 import com.weatherallgregator.jpa.repo.ScheduledNotificationRepo;
+import com.weatherallgregator.service.forecast.ForecastService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.sender.SilentSender;
