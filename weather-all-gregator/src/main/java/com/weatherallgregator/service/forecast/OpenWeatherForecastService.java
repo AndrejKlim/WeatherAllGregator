@@ -6,6 +6,7 @@ import com.weatherallgregator.dto.jdbc.DatePressureRaw;
 import com.weatherallgregator.dto.openweather.OpenWeatherForecast;
 import com.weatherallgregator.enums.ForecastSource;
 import com.weatherallgregator.enums.ForecastType;
+import com.weatherallgregator.enums.ForecastTypeJpa;
 import com.weatherallgregator.jpa.entity.ForecastEntity;
 import com.weatherallgregator.jpa.repo.ForecastRepo;
 import com.weatherallgregator.mapper.OpenWeatherMapper;
@@ -21,6 +22,7 @@ import java.util.*;
 import static com.weatherallgregator.enums.ForecastSource.OPEN_WEATHER;
 import static com.weatherallgregator.enums.ForecastType.FORECAST;
 import static com.weatherallgregator.enums.ForecastType.WEATHER;
+import static com.weatherallgregator.enums.ForecastTypeJpa.MIXED;
 import static com.weatherallgregator.mapper.ForecastLocationMapper.mapToForecastLocationEntity;
 import static com.weatherallgregator.mapper.OpenWeatherMapper.readForecast;
 
@@ -28,7 +30,6 @@ import static com.weatherallgregator.mapper.OpenWeatherMapper.readForecast;
 @Slf4j
 public class OpenWeatherForecastService extends ForecastService{
 
-    public static final String NO_INFO = "No info";
     private final OpenWeatherApiClient apiClient;
     private final JdbcTemplate jdbcTemplate;
 
@@ -45,14 +46,14 @@ public class OpenWeatherForecastService extends ForecastService{
     public WeatherInfo getWeather(final User user) {
         return getOpenWeatherForecast(user, WEATHER)
                 .map(WeatherInfo.class::cast)
-                .orElse(() -> NO_INFO);
+                .orElse(NO_WEATHER_INFO);
     }
 
     @Override
     public ForecastInfo getForecast(final User user) {
         return getOpenWeatherForecast(user, FORECAST)
                 .map(ForecastInfo.class::cast)
-                .orElse(() -> List.of(NO_INFO));
+                .orElse(NO_FORECAST_INFO);
     }
 
     public List<DatePressure> getPressures() {
@@ -78,9 +79,8 @@ public class OpenWeatherForecastService extends ForecastService{
     public Optional<OpenWeatherForecast> getOpenWeatherForecast(final User user, final ForecastType forecastType) {
         ForecastLocation forecastLocation = user.getForecastLocation();
         Optional<ForecastEntity> lastForecastByLocation =
-                repo.findFirstByForecastLocationAndSource(mapToForecastLocationEntity(forecastLocation),
-                        OPEN_WEATHER.name(),
-                        SORT_DESC_BY_CREATED_AT);
+                repo.findFirstByForecastLocationAndSourceAndType(mapToForecastLocationEntity(forecastLocation),
+                        OPEN_WEATHER.name(), MIXED.name(), SORT_DESC_BY_CREATED_AT);
 
         if (lastForecastByLocation.isPresent() && !isExpired(lastForecastByLocation.get(), forecastType)){
             log.info("Suitable and not expired forecast found in storage, returning it. {}", lastForecastByLocation.get());
@@ -99,7 +99,7 @@ public class OpenWeatherForecastService extends ForecastService{
 
         Optional<ForecastEntity> entity = jsonResponse
                 .map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC), json,
-                        OPEN_WEATHER.name(), mapToForecastLocationEntity(forecastLocation)));
+                        OPEN_WEATHER.name(), MIXED.name(), mapToForecastLocationEntity(forecastLocation)));
         entity.ifPresent(repo::save);
 
         return entity.map(OpenWeatherMapper::readForecast);

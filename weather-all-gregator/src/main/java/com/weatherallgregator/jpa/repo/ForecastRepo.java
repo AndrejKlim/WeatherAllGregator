@@ -9,5 +9,6 @@ import java.util.Optional;
 
 public interface ForecastRepo extends JpaRepository<ForecastEntity, Long> {
 
-    Optional<ForecastEntity> findFirstByForecastLocationAndSource(ForecastLocationEntity entity, String source, Sort sort);
+    Optional<ForecastEntity> findFirstByForecastLocationAndSourceAndType(ForecastLocationEntity entity, String source,
+                                                                         String type, Sort sort);
 }

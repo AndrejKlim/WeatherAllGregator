@@ -33,7 +33,7 @@ public class TimerService {
     public TimerService(final WeatherBot weatherBot,
                         final ScheduledNotificationRepo scheduledNotificationRepo,
                         final List<ForecastService> forecastServiceList) {
-        this.sender = weatherBot.silent(); // TODO check another way to send message
+        this.sender = weatherBot.silent();
         this.scheduledNotificationRepo = scheduledNotificationRepo;
         this.forecastServiceList = forecastServiceList;
     }
