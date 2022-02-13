@@ -14,8 +14,10 @@ import java.util.Optional;
 @Slf4j
 public class WeatherBitApiClient extends ApiClient{
 
-    @Value("${app.forecast.weatherbit.url}")
-    private String weatherBitApiUrl;
+    @Value("${app.forecast.weatherbit.url.current}")
+    private String currentWeatherBitApiUrl;
+    @Value("${app.forecast.weatherbit.url.daily}")
+    private String dailyForecastWeatherBitApiUrl;
     @Value("${app.forecast.weatherbit.api-key}")
     private String apiKey;
 
@@ -35,6 +37,21 @@ public class WeatherBitApiClient extends ApiClient{
 
         var httpEntity = HttpEntity.EMPTY;
 
-        return Optional.ofNullable(sendGet(weatherBitApiUrl, httpEntity, params));
+        return Optional.ofNullable(sendGet(currentWeatherBitApiUrl, httpEntity, params));
+    }
+
+    public Optional<String> getDailyForecast(final String latitude, final String longitude) {
+        if (!StringUtils.hasText(latitude) || !StringUtils.hasText(longitude)) {
+            return Optional.empty();
+        }
+
+        var params = new HashMap<String, String>();
+        params.put("lat", latitude);
+        params.put("lon", longitude);
+        params.put("key", apiKey);
+
+        var httpEntity = HttpEntity.EMPTY;
+
+        return Optional.ofNullable(sendGet(dailyForecastWeatherBitApiUrl, httpEntity, params));
     }
 }

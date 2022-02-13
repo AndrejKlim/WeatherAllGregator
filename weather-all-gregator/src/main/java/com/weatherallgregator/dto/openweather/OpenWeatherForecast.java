@@ -56,7 +56,7 @@ public class OpenWeatherForecast implements WeatherInfo, ForecastInfo {
         final String forecastTemplate = """
                                 *Open weather*
                                 Погода на %s
-                                Температура - %.0f ℃
+                                Температура: %.0f ℃
                                 Облачность или осадки - %s
                                 Скорость ветра - %d м/с
                                 Давление - %d мм рт. ст.

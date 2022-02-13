@@ -12,10 +12,13 @@ import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 
 public abstract class ForecastService {
 
     public static final Sort SORT_DESC_BY_CREATED_AT = Sort.by(Sort.Direction.DESC, "createdAt");
+    public static final WeatherInfo NO_WEATHER_INFO = () -> "No info";
+    public static final ForecastInfo NO_FORECAST_INFO = () -> List.of("No info");
 
     protected final ForecastRepo repo;
     protected final ApiCallCounterService apiCallCounterService;

@@ -1,0 +1,1 @@
+alter table forecast add column type varchar(40) not null default 'WEATHER';

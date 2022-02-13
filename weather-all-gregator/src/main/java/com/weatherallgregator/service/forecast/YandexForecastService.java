@@ -17,12 +17,12 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Optional;
 
 import static com.weatherallgregator.enums.ForecastSource.YANDEX;
 import static com.weatherallgregator.enums.ForecastType.FORECAST;
 import static com.weatherallgregator.enums.ForecastType.WEATHER;
+import static com.weatherallgregator.enums.ForecastTypeJpa.MIXED;
 import static com.weatherallgregator.mapper.ForecastLocationMapper.mapToForecastLocationEntity;
 import static com.weatherallgregator.mapper.YandexForecastMapper.readForecast;
 
@@ -30,7 +30,6 @@ import static com.weatherallgregator.mapper.YandexForecastMapper.readForecast;
 @Slf4j
 public class YandexForecastService extends ForecastService{
 
-    public static final String NO_INFO = "No info";
     private final YandexApiClient apiClient;
 
     public YandexForecastService(final ForecastRepo repo,
@@ -44,14 +43,14 @@ public class YandexForecastService extends ForecastService{
     public WeatherInfo getWeather(final User user) {
         return getYandexForecast(user, WEATHER)
                 .map(WeatherInfo.class::cast)
-                .orElse(() -> NO_INFO);
+                .orElse(NO_WEATHER_INFO);
     }
 
     @Override
     public ForecastInfo getForecast(final User user) {
         return getYandexForecast(user, FORECAST)
                 .map(ForecastInfo.class::cast)
-                .orElse(() -> List.of(NO_INFO));
+                .orElse(NO_FORECAST_INFO);
     }
 
     @Override
@@ -62,9 +61,8 @@ public class YandexForecastService extends ForecastService{
     public Optional<YandexForecast> getYandexForecast(final User user, final ForecastType forecastType) {
         ForecastLocation forecastLocation = user.getForecastLocation();
         Optional<ForecastEntity> lastForecastByLocation =
-                repo.findFirstByForecastLocationAndSource(mapToForecastLocationEntity(forecastLocation),
-                        YANDEX.name(),
-                        SORT_DESC_BY_CREATED_AT);
+                repo.findFirstByForecastLocationAndSourceAndType(mapToForecastLocationEntity(forecastLocation),
+                        YANDEX.name(), MIXED.name(), SORT_DESC_BY_CREATED_AT);
 
         if (lastForecastByLocation.isPresent() && !isExpired(lastForecastByLocation.get(), forecastType)) {
             log.info("Suitable and not expired forecast found in storage, returning it. {}", lastForecastByLocation.get());
@@ -80,9 +78,7 @@ public class YandexForecastService extends ForecastService{
                 forecastLocation.getLon().toString());
         jsonResponse.ifPresent(json -> apiCallCounterService.incrementApiCallCounter(YANDEX));
         Optional<ForecastEntity> entity = jsonResponse.map(json -> new ForecastEntity(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
-                json,
-                YANDEX.name(),
-                mapToForecastLocationEntity(forecastLocation)));
+                json, YANDEX.name(), MIXED.name(), mapToForecastLocationEntity(forecastLocation)));
         entity.ifPresent(repo::save);
 
         return entity.map(YandexForecastMapper::readForecast);

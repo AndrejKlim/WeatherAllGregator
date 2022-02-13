@@ -14,6 +14,8 @@ public class ForecastEntity {
     private String forecast; // in json
     @Column(nullable = false)
     private String source;
+    @Column(nullable = false)
+    private String type;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "forecast_location_id")
     private ForecastLocationEntity forecastLocation;
@@ -21,10 +23,11 @@ public class ForecastEntity {
     public ForecastEntity() {
     }
 
-    public ForecastEntity(Long createdAt, String forecast, String source, ForecastLocationEntity forecastLocation) {
+    public ForecastEntity(Long createdAt, String forecast, String source, String type, ForecastLocationEntity forecastLocation) {
         this.createdAt = createdAt;
         this.forecast = forecast;
         this.source = source;
+        this.type = type;
         this.forecastLocation = forecastLocation;
     }
 
@@ -66,6 +69,14 @@ public class ForecastEntity {
 
     public void setSource(final String source) {
         this.source = source;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(final String type) {
+        this.type = type;
     }
 
     @Override
